@@ -9,17 +9,17 @@ void acoustic_1D_4E2T(float * P_pas, float * P_pre,float * P_fut, float * Vp, in
 
 void acoustic_1D_8E2T(float * P_pas, float * P_pre,float * P_fut, float * Vp, int Nx, float dx, float dt);
 
-void acoustic_2D_2E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
+void acoustic_2D_2E2T(int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int z_src,
-                      int *x_src, int n_shots, int nxx,int nzz, float dx, float dz, float dt);
+                      int x_src, int nxx,int nzz, float dx, float dz, float dt);
 
-void acoustic_2D_4E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
+void acoustic_2D_4E2T(int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int z_src,
-                      int *x_src, int n_shots, int nxx,int nzz, float dx, float dz, float dt);
+                      int x_src, int nxx,int nzz, float dx, float dz, float dt);
 
-void acoustic_2D_8E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
+void acoustic_2D_8E2T(int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int z_src,
-                      int *x_src, int n_shots, int nxx,int nzz, float dx, float dz, float dt);
+                      int x_src, int nxx,int nzz, float dx, float dz, float dt);
 
 void acoustic_3D_2E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int *z_src,

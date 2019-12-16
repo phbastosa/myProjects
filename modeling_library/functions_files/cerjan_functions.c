@@ -21,8 +21,8 @@ void Cerjan_2D_corners(float *up_left, float *up_right, float *down_left,
 {
     int ii,jj,kk;
 
-    /* Upper left absorbing corner*/
-    for(ii = n_abc-1; ii >= 0; ii++) 
+    /* Upper left absorbing corner */
+    for(ii = n_abc-1; ii >= 0; ii--) 
     {
         up_left[ii*n_abc + ii] = factor[ii];    
         for(kk = 1; kk <= n_abc; kk++) 

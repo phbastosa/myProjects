@@ -62,9 +62,9 @@ void acoustic_1D_8E2T(float * P_pas, float * P_pre,float * P_fut, float * Vp, in
     }
 }
 
-void acoustic_2D_2E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
+void acoustic_2D_2E2T(int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int z_src,
-                      int *x_src, int n_shots, int nxx,int nzz, float dx, float dz, float dt)
+                      int x_src, int nxx,int nzz, float dx, float dz, float dt)
 {
     int ii,jj,index;
     float d2_P_dx2, d2_P_dz2;
@@ -74,7 +74,7 @@ void acoustic_2D_2E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
         ii = floor(index / nxx);  /* Line indicator */
         jj = index % nxx;         /* Column indicator */  
 
-        if(time_pointer < nsrc) P_pre[z_src*nxx + x_src[shot_pointer]] = source[time_pointer]; /* Applying source*/
+        if(time_pointer < nsrc) P_pre[z_src*nxx + x_src] = source[time_pointer]; /* Applying source*/
 
         if((ii > 0) && (ii < nzz-1) && (jj > 0) && (jj < nxx-1)) 
         {
@@ -94,9 +94,9 @@ void acoustic_2D_2E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
     }
 }
 
-void acoustic_2D_4E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
+void acoustic_2D_4E2T(int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int z_src,
-                      int *x_src, int n_shots, int nxx,int nzz, float dx, float dz, float dt)
+                      int x_src, int nxx,int nzz, float dx, float dz, float dt)
 {
     int ii,jj,index;
     float d2_P_dx2, d2_P_dz2;
@@ -106,7 +106,7 @@ void acoustic_2D_4E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
         ii = floor(index / nxx);  /* Line indicator */
         jj = index % nxx;         /* Column indicator */  
 
-        if(time_pointer < nsrc) P_pre[z_src*nxx + x_src[shot_pointer]] = source[time_pointer]; /* Applying source*/
+        if(time_pointer < nsrc) P_pre[z_src*nxx + x_src] = source[time_pointer]; /* Applying source*/
 
         if((ii > 1) && (ii < nzz-2) && (jj > 1) && (jj < nxx-2)) 
         {
@@ -130,9 +130,9 @@ void acoustic_2D_4E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
     }
 }
 
-void acoustic_2D_8E2T(int shot_pointer, int time_pointer, float *vp, float *P_pre,
+void acoustic_2D_8E2T(int time_pointer, float *vp, float *P_pre,
                       float *P_pas, float *P_fut, float *source, int nsrc, int z_src,
-                      int *x_src, int n_shots, int nxx,int nzz, float dx, float dz, float dt)
+                      int x_src, int nxx,int nzz, float dx, float dz, float dt)
 {
     int ii,jj,index;
     float d2_P_dx2, d2_P_dz2;
@@ -142,7 +142,7 @@ void acoustic_2D_8E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
         ii = floor(index / nxx);  /* Line indicator */
         jj = index % nxx;         /* Column indicator */  
 
-        if(time_pointer < nsrc) P_pre[z_src*nxx + x_src[shot_pointer]] = source[time_pointer]; /* Applying source*/
+        if(time_pointer < nsrc) P_pre[z_src*nxx + x_src] = source[time_pointer]; /* Applying source*/
 
         if((ii > 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
         {
