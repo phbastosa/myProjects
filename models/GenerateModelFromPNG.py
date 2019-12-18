@@ -22,11 +22,11 @@ for kk in range(len(cor)):
 
 plt.figure(figsize=(10,5))
 plt.subplot(121)
-plt.imshow(img)
+plt.mathow(img)
 plt.colorbar()
 
 plt.subplot(122)
-plt.imshow(V)
+plt.mathow(V)
 plt.colorbar()
 plt.show()
 
