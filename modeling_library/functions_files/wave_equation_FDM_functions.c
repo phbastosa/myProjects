@@ -301,3 +301,217 @@ void acoustic_3D_8E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
         }
     }
 }
+
+void elastic_isotropic_2D_wave_8E2T_tension_stencil(float *U, float *V, float *Txx, float *Tzz, float *Txz,
+    float *rho, float *M, float *L, int nxx, int nzz, float dt, float ds) {
+
+    int index,ii,jj;
+    float rho_int,L_int,M_int;
+    float d_Txx_dx, d_Txz_dz, d_Txz_dx, d_Tzz_dz;
+    float d_U_dx, d_V_dz, d_U_dz, d_V_dx;
+
+    for(index = 0; index < nxx*nzz; index++) {              
+
+        ii = (int) index / nxx;      /* Line indicator */
+        jj = (int) index % nxx;      /* Column indicator */ 
+
+        if((ii > 3) && (ii < nzz-3) && (jj > 3) && (jj < nxx-3)) { // vacuum (estencil na tensão)
+         
+            d_Txx_dx = (75*(Txx[(jj-3) + ii*nxx] - Txx[(jj+4) + ii*nxx]) +
+                      1029*(Txx[(jj+3) + ii*nxx] - Txx[(jj-2) + ii*nxx]) +
+                      8575*(Txx[(jj-1) + ii*nxx] - Txx[(jj+2) + ii*nxx]) +
+                    128625*(Txx[(jj+1) + ii*nxx] - Txx[jj + ii*nxx]))/ds;
+
+            d_Txz_dz = (75*(Txz[jj + (ii-4)*nxx] - Txz[jj + (ii+3)*nxx]) +
+                      1029*(Txz[jj + (ii+2)*nxx] - Txz[jj + (ii-3)*nxx]) + 
+                      8575*(Txz[jj + (ii-2)*nxx] - Txz[jj + (ii+1)*nxx]) +
+                    128625*(Txz[jj + ii*nxx]     - Txz[jj + (ii-1)*nxx]))/ds;
+
+            rho_int = 0.5*(rho[jj + ii*nxx] + rho[(jj+1) + ii*nxx]);
+
+            U[jj + ii*nxx] += dt/(rho[jj + ii*nxx]*107520)*(d_Txx_dx + d_Txz_dz);  
+        }
+    }
+
+    for(index = 0; index < nxx*nzz; index++) {              
+
+        ii = (int) index / nxx;      /* Line indicator */
+        jj = (int) index % nxx;      /* Column indicator */ 
+      
+        if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) { // vacuum
+
+        
+            d_Txz_dx = (75*(Txz[(jj-4) + ii*nxx] - Txz[(jj+3) + ii*nxx]) +
+                      1029*(Txz[(jj+2) + ii*nxx] - Txz[(jj-3) + ii*nxx]) +
+                      8575*(Txz[(jj-2) + ii*nxx] - Txz[(jj+1) + ii*nxx]) +
+                    128625*(Txz[jj + ii*nxx]     - Txz[(jj-1) + ii*nxx]))/ds;
+
+            d_Tzz_dz = (75*(Tzz[jj + (ii-3)*nxx] - Tzz[jj + (ii+4)*nxx]) + 
+                      1029*(Tzz[jj + (ii+3)*nxx] - Tzz[jj + (ii-2)*nxx]) +
+                      8575*(Tzz[jj + (ii-1)*nxx] - Tzz[jj + (ii+2)*nxx]) +
+                    128625*(Tzz[jj + (ii+1)*nxx] - Tzz[jj + ii*nxx]))/ds;
+
+            rho_int = 0.5*(rho[jj + ii*nxx] + rho[jj + (ii+1)*nxx]);
+
+            V[jj + ii*nxx] += dt/(rho_int*107520)*(d_Txz_dx + d_Tzz_dz); 
+        }
+    }
+    
+    for(index = 0; index < nxx*nzz; index++) {              
+        
+        ii = (int) index / nxx;      /* Line indicator */
+        jj = (int) index % nxx;      /* Column indicator */
+
+        if((ii > 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) { //vacuum
+
+            d_U_dx = (75*(U[(jj-4) + ii*nxx] - U[(jj+3) + ii*nxx]) + 
+                    1029*(U[(jj+2) + ii*nxx] - U[(jj-3) + ii*nxx]) +
+                    8575*(U[(jj-2) + ii*nxx] - U[(jj+1) + ii*nxx]) + 
+                  128625*(U[jj + ii*nxx]     - U[(jj-1) + ii*nxx]))/ds;
+
+            d_V_dz = (75*(V[jj + (ii-4)*nxx] - V[jj + (ii+3)*nxx]) +   
+                    1029*(V[jj + (ii+2)*nxx] - V[jj + (ii-3)*nxx]) +
+                    8575*(V[jj + (ii-2)*nxx] - V[jj + (ii+1)*nxx]) +
+                  128625*(V[jj + ii*nxx]     - V[jj + (ii-1)*nxx]))/ds;     
+
+            L_int = powf(0.25*(1/L[jj + (ii+1)*nxx] + 1/L[jj + ii*nxx] + 1/L[(jj+1) + ii*nxx] + 1/L[(jj+1) + (ii+1)*nxx]),(-1));
+            M_int = powf(0.25*(1/M[jj + (ii+1)*nxx] + 1/M[jj + ii*nxx] + 1/M[(jj+1) + ii*nxx] + 1/M[(jj+1) + (ii+1)*nxx]),(-1));
+
+            Txx[jj + ii*nxx] += (L_int + 2*M_int)*dt/107520*d_U_dx + 
+                                 L_int*dt/107520*d_V_dz;   
+        
+            Tzz[jj+ ii*nxx] += (L_int + 2*M_int)*dt/107520*d_V_dz +  
+                                L_int*dt/107520*d_U_dx;
+        }
+    }
+
+    for(index = 0; index < nxx*nzz; index++) {              
+        
+        ii = (int) index / nxx;      /* Line indicator */
+        jj = (int) index % nxx;      /* Column indicator */
+
+        if((ii >= 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-3)) {  // vacuum
+
+            d_U_dz = (75*(U[jj + (ii-3)*nxx] - U[jj + (ii+4)*nxx]) +
+                    1029*(U[jj + (ii+3)*nxx] - U[jj + (ii-2)*nxx]) +
+                    8575*(U[jj + (ii-1)*nxx] - U[jj + (ii+2)*nxx]) +
+                  128625*(U[jj + (ii+1)*nxx] - U[jj + ii*nxx]))/ds;
+
+            d_V_dx = (75*(V[(jj-3) + ii*nxx] - V[(jj+4) + ii*nxx]) +
+                    1029*(V[(jj+3) + ii*nxx] - V[(jj-2) + ii*nxx]) +
+                    8575*(V[(jj-1) + ii*nxx] - V[(jj+2) + ii*nxx]) +
+                  128625*(V[(jj+1) + ii*nxx] - V[jj + ii*nxx]))/ds;
+
+            Txz[jj + ii*nxx] += M[jj + ii*nxx]*dt/107520*(d_U_dz + d_V_dx);            
+        }      
+    }
+}
+
+void elastic_isotropic_2D_wave_8E2T_velocity_stencil(float *U, float *V, float *Txx, float *Tzz, float *Txz,
+                                float *rho, float *M, float *L, int nxx, int nzz, float dt,
+                                float ds) {
+
+    int index,ii,jj;
+    float rho_int,L_int,M_int;
+    float d_Txx_dx, d_Txz_dz, d_Txz_dx, d_Tzz_dz;
+    float d_U_dx, d_V_dz, d_U_dz, d_V_dx; 
+
+    #pragma acc parallel loop independent present(U[0:nxx*nzz],rho[0:nxx*nzz],Txx[0:nxx*nzz],Txz[0:nxx*nzz]) copyin(Tzz[0:nzz*nxx]) copyout(U[0:nxx*nzz])
+    for(index = 0; index < nxx*nzz; index++) {              
+
+        ii = (int) index / nxx;      // indicador de linhas   (direção y)
+        jj = (int) index % nxx;      // indicador de colunas  (direção x) 
+
+        if((ii > 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) {
+        
+            d_Txx_dx = (75*(Txx[(jj-3) + ii*nxx] - Txx[(jj+4) + ii*nxx]) +
+                      1029*(Txx[(jj+3) + ii*nxx] - Txx[(jj-2) + ii*nxx]) +
+                      8575*(Txx[(jj-1) + ii*nxx] - Txx[(jj+2) + ii*nxx]) +
+                    128625*(Txx[(jj+1) + ii*nxx] - Txx[jj + ii*nxx]))/ds;
+
+            d_Txz_dz = (75*(Txz[jj + (ii-4)*nxx] - Txz[jj + (ii+3)*nxx]) +
+                      1029*(Txz[jj + (ii+2)*nxx] - Txz[jj + (ii-3)*nxx]) + 
+                      8575*(Txz[jj + (ii-2)*nxx] - Txz[jj + (ii+1)*nxx]) +
+                    128625*(Txz[jj + ii*nxx]     - Txz[jj + (ii-1)*nxx]))/ds;
+
+            U[jj + ii*nxx] += dt/(rho[jj + ii*nxx]*107520)*(d_Txx_dx + d_Txz_dz);  
+        }
+    }
+
+    #pragma acc parallel loop independent present(V[0:nxx*nzz],Txz[0:nxx*nzz],Tzz[0:nxx*nzz],rho[0:nxx*nzz]) copyout(V[0:nxx*nzz]) 
+    for(index = 0; index < nxx*nzz; index++) {              
+
+        ii = (int) index / nxx;      // indicador de linhas  (direção y)
+        jj = (int) index % nxx;      // indicador de colunas (direção x) 
+
+        if((ii >= 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-3)) {
+        
+            d_Txz_dx = (75*(Txz[(jj-4) + ii*nxx] - Txz[(jj+3) + ii*nxx]) +
+                      1029*(Txz[(jj+2) + ii*nxx] - Txz[(jj-3) + ii*nxx]) +
+                      8575*(Txz[(jj-2) + ii*nxx] - Txz[(jj+1) + ii*nxx]) +
+                    128625*(Txz[jj + ii*nxx]     - Txz[(jj-1) + ii*nxx]))/ds;
+
+            d_Tzz_dz = (75*(Tzz[jj + (ii-3)*nxx] - Tzz[jj + (ii+4)*nxx]) + 
+                      1029*(Tzz[jj + (ii+3)*nxx] - Tzz[jj + (ii-2)*nxx]) +
+                      8575*(Tzz[jj + (ii-1)*nxx] - Tzz[jj + (ii+2)*nxx]) +
+                    128625*(Tzz[jj + (ii+1)*nxx] - Tzz[jj + ii*nxx]))/ds;
+
+            rho_int = 0.25*(rho[jj + ii*nxx] + rho[jj + (ii+1)*nxx] + rho[(jj+1) + (ii+1)*nxx] + rho[(jj+1) + ii*nxx]);
+
+            V[jj + ii*nxx] += dt/(rho_int*107520)*(d_Txz_dx + d_Tzz_dz); 
+        }
+    }
+    
+    #pragma acc parallel loop independent present(U[0:nxx*nzz],V[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz]) copyout(Txx[0:nxx*nzz],Tzz[0:nxx*nzz])
+    for(index = 0; index < nxx*nzz; index++) {              
+        
+        ii = (int) index / nxx;      // indicador de linhas  (direção y)
+        jj = (int) index % nxx;      // indicador de colunas (direção x)
+
+        if((ii > 3) && (ii < nzz-3) && (jj > 3) && (jj < nxx-3)) {
+
+            L_int = 0.5*(L[jj + (ii+1)*nxx] + L[jj + ii*nxx]);
+            M_int = 0.5*(M[jj + (ii+1)*nxx] + M[jj + ii*nxx]);
+
+            d_U_dx = (75*(U[(jj-4) + ii*nxx] - U[(jj+3) + ii*nxx]) + 
+                    1029*(U[(jj+2) + ii*nxx] - U[(jj-3) + ii*nxx]) +
+                    8575*(U[(jj-2) + ii*nxx] - U[(jj+1) + ii*nxx]) + 
+                  128625*(U[jj + ii*nxx]     - U[(jj-1) + ii*nxx]))/ds;
+
+            d_V_dz = (75*(V[jj + (ii-4)*nxx] - V[jj + (ii+3)*nxx]) +   
+                    1029*(V[jj + (ii+2)*nxx] - V[jj + (ii-3)*nxx]) +
+                    8575*(V[jj + (ii-2)*nxx] - V[jj + (ii+1)*nxx]) +
+                  128625*(V[jj + ii*nxx]     - V[jj + (ii-1)*nxx]))/ds;     
+
+            Txx[jj + ii*nxx] += (L_int + 2*M_int)*dt/107520*d_U_dx + 
+                                 L_int*dt/107520*d_V_dz;   
+        
+            Tzz[jj+ ii*nxx] += (L_int + 2*M_int)*dt/107520*d_V_dz +  
+                                L_int*dt/107520*d_U_dx;
+        }
+    }
+
+    #pragma acc parallel loop independent present(Txz[0:nzz*nxx],M[0:nzz*nxx],U[0:nzz*nxx],V[0:nzz*nxx]) copyout(Txz[0:nzz*nxx])
+    for(index = 0; index < nxx*nzz; index++) {              
+        
+        ii = (int) index / nxx;      // indicador de linhas  (direção y)
+        jj = (int) index % nxx;      // indicador de colunas (direção x)
+
+        if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) {
+
+            M_int = 0.5*(M[(jj+1) + ii*nxx] + M[jj + ii*nxx]); 
+
+            d_U_dz = (75*(U[jj + (ii-3)*nxx] - U[jj + (ii+4)*nxx]) +
+                    1029*(U[jj + (ii+3)*nxx] - U[jj + (ii-2)*nxx]) +
+                    8575*(U[jj + (ii-1)*nxx] - U[jj + (ii+2)*nxx]) +
+                  128625*(U[jj + (ii+1)*nxx] - U[jj + ii*nxx]))/ds;
+
+            d_V_dx = (75*(V[(jj-3) + ii*nxx] - V[(jj+4) + ii*nxx]) +
+                    1029*(V[(jj+3) + ii*nxx] - V[(jj-2) + ii*nxx]) +
+                    8575*(V[(jj-1) + ii*nxx] - V[(jj+2) + ii*nxx]) +
+                  128625*(V[(jj+1) + ii*nxx] - V[jj + ii*nxx]))/ds;
+
+            Txz[jj + ii*nxx] += M_int*dt/107520*(d_U_dz + d_V_dx);            
+        }
+    }
+}

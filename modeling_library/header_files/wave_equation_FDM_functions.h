@@ -36,4 +36,10 @@ void acoustic_3D_8E2T(int shot_pointer, int time_pointer, float *vp, float *P_pr
                       int *y_src, int *x_src, int n_shots, int nxx, int nyy, int nzz, 
                       float dx, float dy, float dz, float dt);
 
+void elastic_isotropic_2D_wave_8E2T_tension_stencil(float *U, float *V, float *Txx, float *Tzz, float *Txz,
+    float *rho, float *M, float *L, int nxx, int nzz, float dt, float ds);
+
+void elastic_isotropic_2D_wave_8E2T_velocity_stencil(float *U, float *V, float *Txx, float *Tzz, float *Txz,
+    float *rho, float *M, float *L, int nxx, int nzz, float dt, float ds);
+
 # endif
