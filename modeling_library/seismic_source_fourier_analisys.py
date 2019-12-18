@@ -14,12 +14,20 @@ for i in range(-int(nsrc/2),int(nsrc/2)):
     aux2 = 1 - 2*np.pi*pow(i*dt,2.0)*pow(fc,2.0)*pow(np.pi,2.0);
     ricker[i + int(nsrc/2)] = aux1 * aux2
 
-plt.plot(t,ricker)
-plt.show()
-
 freq = np.fft.fftfreq(nsrc,dt)
 ricker_fft = np.abs(np.fft.fft(ricker))
 
+plt.figure(figsize=(13,5))
+plt.subplot(121)
+plt.plot(t,ricker)
+plt.title("Seismic source Ricker")
+plt.xlabel("Time [s]")
+plt.ylabel("Amplitude")
+
+plt.subplot(122)
 plt.plot(freq,ricker_fft)
+plt.title("Ricker's amplitde spectrum")
+plt.xlabel("Frequency [Hz]")
+plt.ylabel("Amplitude")
 plt.xlim([0,100])
 plt.show()
