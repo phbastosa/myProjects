@@ -3,10 +3,10 @@
 # include <math.h>
 # include <time.h>
 # include <string.h>
-# include "../modeling_library/header_files/io_functions.h"
-# include "../modeling_library/header_files/wavelet_functions.h"
-# include "../modeling_library/header_files/cerjan_functions.h"
-# include "../modeling_library/header_files/wave_equation_FDM_functions.h"
+# include "../../modeling_library/header_files/io_functions.h"
+# include "../../modeling_library/header_files/wavelet_functions.h"
+# include "../../modeling_library/header_files/cerjan_functions.h"
+# include "../../modeling_library/header_files/wave_equation_FDM_functions.h"
 
 void wavefield_set(float *V, float *U, float *Txx, float *Tzz, float *Txz, int nxx, int nzz) {
     mem_set(V,nxx*nzz);
@@ -18,7 +18,7 @@ void wavefield_set(float *V, float *U, float *Txx, float *Tzz, float *Txz, int n
 
 int main(int argc, char **argv) {
 
-    printf("\nElastic wave modelling in isotropic media using tension stencil\n\n");
+    printf("\nElastic wave modelling in isotropic media using velocity stencil\n\n");
 
     char shot_number[200];
     int borda = 200;
@@ -28,7 +28,6 @@ int main(int argc, char **argv) {
     int nzz = 500;
     float pi = 4*atan(1); 
     int index, ii, jj, kk, pp;
-    char snapshot_char[200];
 
     float total_time;
     time_t t_0, t_f;
@@ -75,7 +74,7 @@ int main(int argc, char **argv) {
     if (stop == 1) return 0;
 
     ricker = build_first_gaussian_derivative(nsrc,f_corte,dt);
-    fator = factor_attenuation(0.0012,borda);
+    fator = factor_attenuation(0.0008,borda);
     Cerjan_2D_corners(up_left,up_right,down_left,down_right,fator,borda);
 
     wavefield_set(V,U,Txx,Tzz,Txz,nxx,nzz);
@@ -87,13 +86,13 @@ int main(int argc, char **argv) {
             Txx[(250)*nxx + 250] += ricker[kk];                    
         }        
                                     
-        elastic_isotropic_2D_wave_8E2T_tension_stencil(U,V,Txx,Tzz,Txz,rho,M,L,nxx,nzz,dt,ds);
+        elastic_isotropic_2D_wave_8E2T_velocity_stencil(U,V,Txx,Tzz,Txz,rho,M,L,nxx,nzz,dt,ds);
 
         Cerjan_2D_elastic_attenuation(U,V,Txx,Tzz,Txz,nxx,nzz,fator,up_left,up_right,down_left,down_right,borda);            
 
         if(kk % 200 == 0) printf("Propagation time = %0.5f seconds\n", kk*dt);
 
-        exporting_2D_snapshots(kk,snapshot,V,vp,"../results/snapshots.bin",nsrc,nxx,nzz);
+        exporting_2D_snapshots(kk,snapshot,V,vp,"../results/snapshots_velocity_stencil.bin",nsrc,nxx,nzz);
 
         for(index = 0; index < nxx; index++) 
         {
@@ -101,8 +100,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    exporting_pointer_seismogram("../results/Vz_tension_stencil.bin",nxx,nt,seismogram);
-    // export_float32("../results/sismo_tensao.bin",nxx*nt,seismogram);
+    exporting_pointer_seismogram("../results/Vz_velocity_stencil.bin",nxx,nt,seismogram);
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);
