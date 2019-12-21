@@ -23,8 +23,8 @@ int main(int argc, char **argv) {
     char shot_number[200];
     int borda = 200;
     int nsrc = 600;
-    int nt = 2000;
-    int nxx = 500; 
+    int nt = 1000;
+    int nxx = 800; 
     int nzz = 500;
     float pi = 4*atan(1); 
     int index, ii, jj, kk, pp;
@@ -54,36 +54,38 @@ int main(int argc, char **argv) {
     float *down_left = (float *) malloc(borda*borda*sizeof(float));
     float *down_right = (float *) malloc(borda*borda*sizeof(float));
     
-    // vp = import_float32("../models/vp.bin",nxx*nzz);
-    // vs = import_float32("../models/vs.bin",nxx*nzz);
-    // rho = import_float32("../models/rho.bin",nxx*nzz);
+    vp = import_float32("../models/vp.bin",nxx*nzz);
+    vs = import_float32("../models/vs.bin",nxx*nzz);
+    rho = import_float32("../models/rho.bin",nxx*nzz);
 
     for(index = 0; index < nxx*nzz; index++) {
-        vp[index] = 2000;
-        vs[index] = vp[index]/sqrt(3);
-        rho[index] = 310*pow(vp[index],0.25);
+        // vp[index] = 2000;
+        // vs[index] = vp[index]/sqrt(3);
+        // rho[index] = 310*pow(vp[index],0.25);
         M[index] = rho[index]*pow(vs[index],2.0);
         L[index] = rho[index]*pow(vp[index],2.0) - 2*M[index];
     }
 
-    float ds = 2.0;          /* Spatial discretization parameter */  
-    float dt = 0.0003;       /* Temporal discretization parameter */ 
+    float ds = 3.0;          /* Spatial discretization parameter */  
+    float dt = 0.0008;       /* Temporal discretization parameter */ 
     float f_corte = 100.0;   /* Source cutoff frequency */
 
-    int stop = describe_2D_model_stability(vp,vs,nxx,nzz,f_corte,nt,dt,ds);
-    if (stop == 1) return 0;
+    // int stop = describe_2D_model_stability(vp,vs,nxx,nzz,f_corte,nt,dt,ds);
+    // if (stop == 1) return 0;
 
     ricker = build_first_gaussian_derivative(nsrc,f_corte,dt);
     fator = factor_attenuation(0.0008,borda);
-    Cerjan_2D_corners(up_left,up_right,down_left,down_right,fator,borda);
 
+    Cerjan_2D_corners(up_left,up_right,down_left,down_right,fator,borda);
+    printf("Passei por aqui...\n");
+ 
     wavefield_set(V,U,Txx,Tzz,Txz,nxx,nzz);
 
     for(kk = 0; kk < nt; kk++) {    
 
         if(kk <= nsrc) {
-            Tzz[(250)*nxx + 250] += ricker[kk];
-            Txx[(250)*nxx + 250] += ricker[kk];                    
+            Tzz[(200)*nxx + 250] += ricker[kk];
+            Txx[(200)*nxx + 250] += ricker[kk];                    
         }        
                                     
         elastic_isotropic_2D_wave_8E2T_velocity_stencil(U,V,Txx,Tzz,Txz,rho,M,L,nxx,nzz,dt,ds);
@@ -94,13 +96,15 @@ int main(int argc, char **argv) {
 
         exporting_2D_snapshots(kk,snapshot,V,vp,"../results/snapshots_velocity_stencil.bin",nsrc,nxx,nzz);
 
-        for(index = 0; index < nxx; index++) 
-        {
-            seismogram[kk*nxx + index] = V[200*nxx + index];
+        if (kk >= nsrc/2) {
+            for(index = 0; index < nxx; index++) 
+            {
+                seismogram[kk*nxx + index] = V[200*nxx + index];
+            }
         }
     }
 
-    exporting_pointer_seismogram("../results/Vz_velocity_stencil.bin",nxx,nt,seismogram);
+    exporting_pointer_seismogram("../results/Vz_velocity_stencil.bin",nxx,nt-nsrc/2,seismogram);
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);

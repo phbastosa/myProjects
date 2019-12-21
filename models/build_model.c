@@ -54,10 +54,10 @@ void read_and_expand_model(int nx, int nz, int nxx, int nzz, int attenuation_lay
 int main(int argc, char **argv) {
 
     int ii,jj;
-    int nx = 2500;
-    int nz = 270;
-    int nxx = 2700;
-    int nzz = 470;
+    int nx = 1000;
+    int nz = 500;
+    int nxx = 800;
+    int nzz = 500;
     int attenuatiion_layer = 100;
     int *topo = (int *) malloc(nxx*sizeof(int));
     float (*vp)[nxx] = malloc(sizeof(float[nzz][nxx]));
@@ -67,60 +67,60 @@ int main(int argc, char **argv) {
     char * expanded_model = "modelo_expandido_teste.bin";
     char * topography = "topografia_teste.txt";
 
-    read_and_expand_model(nx,nz,nxx,nzz,attenuatiion_layer,model,expanded_model);
+    // read_and_expand_model(nx,nz,nxx,nzz,attenuatiion_layer,model,expanded_model);
 
-    FILE *rm = fopen(expanded_model,"rb");
-    for(ii = 0; ii < nxx; ii++) {
-        for(jj = 0; jj < nzz; jj++) {
-            fread(&vp[jj][ii],sizeof(float),1,rm);
-        } 
-    }
-    fclose(rm);
+    // FILE *rm = fopen(expanded_model,"rb");
+    // for(ii = 0; ii < nxx; ii++) {
+    //     for(jj = 0; jj < nzz; jj++) {
+    //         fread(&vp[jj][ii],sizeof(float),1,rm);
+    //     } 
+    // }
+    // fclose(rm);
 
-    FILE *rt = fopen(topography,"r");
-    if(rt != NULL) {
-        ii = 0;
-        while(fscanf(rt,"%i",&topo[ii]) != EOF) {
-            ++ii;                    
-        }
-    } 
-    fclose(rt);
+    // FILE *rt = fopen(topography,"r");
+    // if(rt != NULL) {
+    //     ii = 0;
+    //     while(fscanf(rt,"%i",&topo[ii]) != EOF) {
+    //         ++ii;                    
+    //     }
+    // } 
+    // fclose(rt);
 
     // Parallel plane layer model    
     for(ii = 0; ii < nzz; ii++) 
     {
         for(jj = 0; jj < nxx; jj++)
         {
-            if(ii < topo[jj]) 
-            { 
-            // if(ii < 100) {          // Vacuum layer
-                rho[ii][jj] = 310*pow(vp[ii][jj],0.25);               
+            // if(ii < topo[jj]) 
+            // { 
+            if(ii < 200) {          // Vacuum layer
+                rho[ii][jj] = 310*pow(500,0.25);               
                 vp[ii][jj]  = 0.0f;
                 vs[ii][jj]  = 0.0f; 
             }  
-            if(ii >= topo[jj])
-            {        
-                vs[ii][jj] = vp[ii][jj]/sqrt(3);
-                rho[ii][jj] = 310*pow(vp[ii][jj],0.25);
-            }
-            // if((ii >= 100) && (ii < 150))  // Assembling the model itself 
-            // {      
-            //     vp[ii][jj] = 1800.0f;
+            // if(ii >= topo[jj])
+            // {        
             //     vs[ii][jj] = vp[ii][jj]/sqrt(3);
             //     rho[ii][jj] = 310*pow(vp[ii][jj],0.25);
             // }
+            if((ii >= 200) && (ii < 210))  // Assembling the model itself 
+            {      
+                vp[ii][jj] = 500.0f;
+                vs[ii][jj] = vp[ii][jj]/sqrt(3);
+                rho[ii][jj] = 310*pow(vp[ii][jj],0.25);
+            }
             // if((ii >= 150) && (ii < 300))
             // {
             //     vp[ii][jj] = 2000.0f;
             //     vs[ii][jj] = vp[ii][jj]/sqrt(3);
             //     rho[ii][jj] = 310*pow(vp[ii][jj],0.25);
             // }
-            // if(ii >= 300)
-            // {
-            //     vp[ii][jj] = 2900.0f;
-            //     vs[ii][jj] = vp[ii][jj]/sqrt(3);
-            //     rho[ii][jj] = 310*pow(vp[ii][jj],0.25);
-            // }
+            if(ii >= 210)
+            {
+                vp[ii][jj] = 2000.0f;
+                vs[ii][jj] = vp[ii][jj]/sqrt(3);
+                rho[ii][jj] = 310*pow(vp[ii][jj],0.25);
+            }
         }
     }
 

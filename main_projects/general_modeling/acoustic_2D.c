@@ -23,12 +23,12 @@ int main(int argc, char **argv)
     
     FILE *ptr1, *ptr2; /* Input Output pointers */     
 
-    Nx = 500;          /* Length of the model */
+    Nx = 1000;          /* Length of the model */
     Nz = 500;          /* Length of the model */
     h = 5.0;           /* Spatial discretifation parameter */
     Nt = 3000;         /* Total samples of the time */
     dt = 0.0002;       /* Time discretization parameter */
-    sx = 250;          /* Shot position in the modeling */
+    sx = 100;          /* Shot position in the modeling */
     sz = 100;          /* Shot position in the modeling */
     fcut = 100;        /* Cutoff frequency of the synthetic seismic source */
     amost_f = 1000;    /* Total samples of the synthetic seismic source */
