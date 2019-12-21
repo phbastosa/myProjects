@@ -117,15 +117,12 @@ else:
     if b >= 0:
         jogadas[b] = 'O'
         somatorio[b] = -1
-    else:
+    else:                    
         if jog_ant and jog in [1,3,7,9]:
-            if somatorio[5] == 0:
-                jogadas[5] = 'O'
-                somatorio[5] = -1
-            else:
-                jogadas[2] = 'O'
-                somatorio[2] = -1
-                    
+            if somatorio[1] == 0:
+                jogadas[1] = 'O'
+                somatorio[1] = -1
+        
         if jog_ant in [1,3,7,9] and jog in [2,4,6,8]:
             if somatorio[3] == 0:
                 jogadas[2] = 'O'
@@ -135,12 +132,17 @@ else:
                 somatorio[0] = -1
 
         if jog_ant in [2,6,8] and jog in [1,3,7,9]:
-            if somatorio[0] == 1:
+            jogadas[8] = 'O'
+            somatorio[8] = -1
+             
+        if jog_ant and jog in [2,4,6,8]:
+            if somatorio[0] == 0:
+                jogadas[0] = 'O'
+                somatorio[0] = -1
+            else:
                 jogadas[6] = 'O'
                 somatorio[6] = -1
-            else:
-                jogadas[8] = 'O'
-                somatorio[8] = -1
+
 
     jog = fnc.player(jogadas,somatorio) # jogada do jogador
     print(("-=")*30)
@@ -160,14 +162,18 @@ else:
         jogadas[b] = 'O'
         somatorio[b] = -1
     else:
-        possibilidade = []
-        for i in range(len(somatorio)):
-            if somatorio[i] == 0:
-                possibilidade.append(i)
+        if jog == 6 and somatorio[6] == 0:
+            jogadas[6] = 'O'
+            somatorio[6] = -1    
+        else:
+            possibilidade = []
+            for i in range(len(somatorio)):
+                if somatorio[i] == 0:
+                    possibilidade.append(i)
 
-        p = choice(possibilidade)
-        jogadas[p] = 'O'
-        somatorio[p] = -1
+            p = choice(possibilidade)
+            jogadas[p] = 'O'
+            somatorio[p] = -1
 
     jog = fnc.player(jogadas,somatorio) # jogada do jogador
     print(("-=")*30)
