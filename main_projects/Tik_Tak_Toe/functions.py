@@ -238,6 +238,7 @@ def winner(s):
 
     if lin1 == 3 or lin2 == 3 or lin3 == 3 or col1 == 3 or col2 == 3 or col3 == 3 or diag1 == 3 or diag2 == 3:
         print("Jogador ganhou!\n")
-         
+
     if lin1 == -3 or lin2 == -3 or lin3 == -3 or col1 == -3 or col2 == -3 or col3 == -3 or diag1 == -3 or diag2 == -3:
         print("Computador ganhou!\n")
+

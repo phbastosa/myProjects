@@ -9,7 +9,7 @@ print(("-=")*30)
 print("Os números mostrados abaixo são \nas posições possíveis para as jogadas.")
 fnc.show_matrix(posicoes)
 print("Jogador será marcado com X e computador com O.")
-print(("-=")*20)
+print(("-=")*30)
 
 while True:
     somatorio = [0,0,0,0,0,0,0,0,0]
@@ -59,6 +59,8 @@ while True:
 
             print("Deseja jogar novamente? [s ou n]")
             r = str(input("Resposta: "))
+            print(("-=")*30)
+
             if r == 'n':
                 print("\nFoi muito bom jogar com você!!\n")
                 exit()
@@ -96,6 +98,7 @@ while True:
 
             print("Deseja jogar novamente? [s ou n]")
             r = str(input("Resposta: "))
+            print(("-=")*30)
             if r == 'n':
                 print("\nFoi muito bom jogar com você!!\n")
                 exit()
@@ -122,13 +125,15 @@ while True:
 
         print("Deseja jogar novamente? [s ou n]")
         r = str(input("Resposta: "))
+        print(("-=")*30)
         if r == 'n':
             print("\nFoi muito bom jogar com você!!\n")
             exit()
         else:
             continue                    
 
-    else:
+    else:  # Divisor de águas
+    
         jog_ant = jog
         if jog in [1,3,7,9]:
             jogadas[4] = 'O'
@@ -152,30 +157,31 @@ while True:
             jogadas[b] = 'O'
             somatorio[b] = -1
         else:                    
-            if jog_ant and jog in [1,3,7,9]:
+            if jog and jog_ant in [1,3,7,9]:
                 if somatorio[1] == 0:
                     jogadas[1] = 'O'
                     somatorio[1] = -1
             
-            if jog_ant in [1,3,7,9] and jog in [2,4,6,8]:
-                if somatorio[3] == 0:
-                    jogadas[2] = 'O'
-                    somatorio[2] = -1
-                elif somatorio[5] == 0:
+            if jog_ant in [2,4,6,8]:
+                if jog in [1,3,7,9]:
+                    jogadas[4] = 'O'
+                    somatorio[4] = -1
+                
+            if jog_ant in [4,8]:
+                if jog in [2,4,6,8]:
+                    jogadas[4] = 'O'
+                    somatorio[4] = -1
+
+            if jog_ant == 2:
+                if jog in [4,6]:
+                    jogadas[4] = 'O'
+                    somatorio[4] = -1
+
+            if jog_ant == 6:
+                if jog in [2,8]:
                     jogadas[0] = 'O'
                     somatorio[0] = -1
 
-            if jog_ant in [2,6,8] and jog in [1,3,7,9]:
-                jogadas[8] = 'O'
-                somatorio[8] = -1
-                
-            if jog_ant and jog in [2,4,6,8]:
-                if somatorio[0] == 0:
-                    jogadas[0] = 'O'
-                    somatorio[0] = -1
-                else:
-                    jogadas[6] = 'O'
-                    somatorio[6] = -1
 
         jog = fnc.player(jogadas,somatorio) # jogada do jogador
         print(("-=")*30)
@@ -195,6 +201,7 @@ while True:
 
             print("Deseja jogar novamente? [s ou n]")
             r = str(input("Resposta: "))
+            print(("-=")*30)
             if r == 'n':
                 print("\nFoi muito bom jogar com você!!\n")
                 exit()
@@ -236,6 +243,7 @@ while True:
 
             print("Deseja jogar novamente? [s ou n]")
             r = str(input("Resposta: "))
+            print(("-=")*30)
             if r == 'n':
                 print("\nFoi muito bom jogar com você!!\n")
                 exit()
@@ -261,8 +269,9 @@ while True:
 
         print("Deseja jogar novamente? [s ou n]")
         r = str(input("Resposta: "))
+        print(("-=")*30)
         if r == 'n':
-            print("\n Foi muito bom jogar com você!!\n")
+            print("\nFoi muito bom jogar com você!!\n")
             exit()
         else:
             continue                    
