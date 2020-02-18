@@ -4,7 +4,7 @@ import matplotlib.image as mpimg
 
 img = mpimg.imread('model.jpg')
 
-maximo = 1490
+maximo = 1495
 minimo = 2800
 
 Lx = img.shape[0]
