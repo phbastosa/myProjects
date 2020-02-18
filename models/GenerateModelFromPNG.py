@@ -2,10 +2,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 
-img = mpimg.imread('20191111_EsquemaModeloPaulo_v2.png')
+img = mpimg.imread('model.jpg')
 
-maximo = 1000
-minimo = 4000
+maximo = 1490
+minimo = 2800
 
 Lx = img.shape[0]
 Ly = img.shape[1]
@@ -22,12 +22,12 @@ for kk in range(len(cor)):
 
 plt.figure(figsize=(10,5))
 plt.subplot(121)
-plt.mathow(img)
+plt.imshow(img)
 plt.colorbar()
 
 plt.subplot(122)
-plt.mathow(V)
+plt.imshow(V)
 plt.colorbar()
 plt.show()
 
-np.savetxt('modelo_vr_bruna.txt',V)
+np.savetxt('model.txt',V)
