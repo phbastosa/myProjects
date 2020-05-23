@@ -23,24 +23,24 @@ int main(int argc, char **argv)
     
     FILE *ptr1, *ptr2; /* Input Output pointers */     
 
-    Nx = 1000;          /* Length of the model */
-    Nz = 500;          /* Length of the model */
+    Nx = 300;          /* Length of the model */
+    Nz = 300;          /* Length of the model */
     h = 5.0;           /* Spatial discretifation parameter */
-    Nt = 3000;         /* Total samples of the time */
-    dt = 0.0002;       /* Time discretization parameter */
-    sx = 100;          /* Shot position in the modeling */
-    sz = 100;          /* Shot position in the modeling */
+    Nt = 1000;         /* Total samples of the time */
+    dt = 0.0005;       /* Time discretization parameter */
+    sx = 150;          /* Shot position in the modeling */
+    sz = 150;          /* Shot position in the modeling */
     fcut = 100;        /* Cutoff frequency of the synthetic seismic source */
     amost_f = 1000;    /* Total samples of the synthetic seismic source */
     int bondary = 100; /* Samples used in the attenuation layer */
 
-    float * ricker = (float *) malloc(amost_f*sizeof(float)); /* Sinthetic seismic source*/
+    float * ricker = (float *) malloc(amost_f*sizeof(float));    /* Sinthetic seismic source*/
     float * P1 = (float *) malloc(Nx*Nz*sizeof(float));          /* Future wavefield */
     float * P2 = (float *) malloc(Nx*Nz*sizeof(float));          /* Present wavefield */
     float * P3 = (float *) malloc(Nx*Nz*sizeof(float));          /* Past wavefield */
     float * Vp = (float *) malloc(Nx*Nz*sizeof(float));          /* Compressional wave velocities */ 
-    float * factor = (float *) malloc(bondary * sizeof(float)); /* Factor to absorb the amplitude of the wave */
-    float (*Seism)[Nx] = malloc(sizeof(float[Nt][Nx]));       /* Seismogram, the complete wavefield */
+    float * factor = (float *) malloc(bondary * sizeof(float));  /* Factor to absorb the amplitude of the wave */
+    float (*Seism)[Nx] = malloc(sizeof(float[Nt][Nx]));          /* Seismogram, the complete wavefield */
 
     float * UL = (float *) malloc(bondary * bondary * sizeof(float));
     float * UR = (float *) malloc(bondary * bondary * sizeof(float));
@@ -70,6 +70,8 @@ int main(int argc, char **argv)
         Cerjan_2D_acoustic_attenuation(P2,P1,factor,Nx,Nz,bondary,DL,DR,UL,UR);
 
         update_wavefield(P3,P2,P1,Nx*Nz);
+
+        exporting_2D_snapshots(k,P1,P1,Vp,"snaps.bin",amost_f,Nx,Nz);
 
         for(i = 0; i < Nx; i++) {
             Seism[k][i] = P2[sz*Nx + i]; /* Case 2D, we record the surface disturbances */

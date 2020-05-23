@@ -37,7 +37,7 @@ void exporting_2D_snapshots(int time_pointer, float *snaps, float *WaveField, fl
     int ii, jj, index;
 
     /* Exporting the snapshots */
-    if((time_pointer % 100 == 0) && (time_pointer > nsrc/2)) 
+    if((time_pointer % 10 == 0) && (time_pointer > nsrc/2)) 
     {
         for(index = 0; index < nxx*nzz; ++index) 
         {                    
