@@ -4,8 +4,8 @@ import matplotlib.image as mpimg
 
 img = mpimg.imread('model.jpg')
 
-maximo = 1495
-minimo = 2800
+minimo = 1495
+maximo = 2800
 
 Lx = img.shape[0]
 Ly = img.shape[1]
@@ -13,7 +13,7 @@ Ly = img.shape[1]
 N = img[0:Lx,0:Ly,2].copy()
 
 cor = np.arange(0,256)
-vel = cor/256 * (maximo - minimo) + minimo
+vel = cor/256 * (minimo - maximo) + maximo
 V = np.zeros((Lx,Ly))
 
 for kk in range(len(cor)):
