@@ -28,36 +28,31 @@ vp   = readBinaryVector(nz,"../model/velocities.bin")
 depth = np.arange(nz) * dz
 times = np.arange(nt) * dt
 
-filenames = []
-for i in range(nSnap):
-    filenames.append(f"wave1D_time_{i}.png") 
+plt.figure(1,figsize=(15,7))
+plt.subplot(131)
+plt.plot(vp,depth)
+plt.gca().invert_yaxis()
+plt.title("Velocity model",fontsize=18)
+plt.xlabel("Velocities [m/s]",fontsize=12)
+plt.ylabel("Depth [m]",fontsize=12)
 
-    plt.figure(i+1,figsize=(15,7))
-    plt.subplot(131)
-    plt.plot(vp,depth)
-    plt.gca().invert_yaxis()
-    plt.title("Velocity model",fontsize=18)
-    plt.xlabel("Velocities [m/s]",fontsize=12)
-    plt.ylabel("Depth [m]",fontsize=12)
+i = 480
 
-    plt.subplot(132)
-    plt.plot(snap[i,:],depth)
-    plt.xlim([-100,100])
-    plt.gca().set_yticklabels([])
-    plt.gca().invert_yaxis()
-    plt.title(f"Wave field at time {i*dt:.1f}",fontsize=18)
-    plt.xlabel("Amplitude",fontsize=12)
+plt.subplot(132)
+plt.plot(snap[i,:],depth)
+plt.xlim([-100,100])
+plt.gca().set_yticklabels([])
+plt.gca().invert_yaxis()
+plt.title(f"Wave field at {i*dt:.2f} sec",fontsize=18)
+plt.xlabel("Amplitude",fontsize=12)
 
-    plt.subplot(133)
-    plt.plot(seis,times)
-    plt.xlim([-100,100])
-    plt.gca().invert_yaxis()
-    plt.title("Surface seismogram",fontsize=18)
-    plt.xlabel("Amplitude",fontsize=12)
-    plt.ylabel("Times [s]",fontsize=12)
-    plt.savefig(f"{filenames[i]}",bbox_inches="tight")
+plt.subplot(133)
+plt.plot(seis,times)
+plt.xlim([-100,100])
+plt.gca().invert_yaxis()
+plt.title("Surface seismogram",fontsize=18)
+plt.xlabel("Amplitude",fontsize=12)
+plt.ylabel("Times [s]",fontsize=12)
+plt.savefig(f"imageGithub{i}.png",bbox_inches="tight")
 
-with imageio.get_writer('movie.gif', mode='I') as writer:
-    for filename in filenames:
-        image = imageio.imread(filename)
-        writer.append_data(image)
+plt.show()
