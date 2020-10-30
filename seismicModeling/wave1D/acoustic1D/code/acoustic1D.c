@@ -1,46 +1,53 @@
+# include <time.h>
+# include <math.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include <time.h>
 # include "acoustic1D.h"
 
 int main(int argc, char **argv) 
 {
-    float totalTime;  /* Total time */
-    time_t ti, tf;    /* Initial and final time */
-    ti = time(NULL);  /* Starting the time */
+    printf("Scalar 1D wave propagation\n\n");
 
-    int nx = 500;
-    int nt = 1001;         
-    int sx = 250;      /* Shot position in the modeling */   
-    int nsrc = 500;    /* Total samples of the source */
-    int nabc = 100;    /* Samples used in the attenuation layer */
+    float totalTime;  
+    time_t ti, tf;    
+    ti = time(NULL);  
+
+    int nz, nt, nsrc, nabc;
+    float dz, dt;
     
-    float dx = 10.0f;
-    float dt = 0.001f;
-    float fcut = 30.0f; 
+    readParameters(&nz,&nt,&dz,&dt,&nabc,&nsrc,argv[1]);    
+    int nzz = nz + 2*nabc;
 
-    float * pas = (float *) malloc(nx*sizeof(float));   /* Future wavefield */
-    float * pre = (float *) malloc(nx*sizeof(float));   /* Present wavefield */
-    float * fut = (float *) malloc(nx*sizeof(float));   /* Past wavefield */
-    float * vel = (float *) malloc(nx*sizeof(float));   /* Compressional wave velocities */ 
+    float * pas = (float *) malloc(nzz*sizeof(float));   
+    float * pre = (float *) malloc(nzz*sizeof(float));   
+    float * fut = (float *) malloc(nzz*sizeof(float));   
+    float * vel = (float *) malloc(nzz*sizeof(float));   
+    float * damp = (float *) malloc(nzz*sizeof(float));
+    float * source = (float *) malloc(nsrc*sizeof(float));
 
-    for (int ii = 0; ii < nx; ii++) vel[ii] = 2000.0f;
+    int nSnap = 1000;
+    float * snap = (float *) malloc(nz*nSnap*sizeof(float));
+    float * seis = (float *) malloc(nt*sizeof(float));
 
-    setToZero(pas,pre,fut,nx);
+    importVector(vel,nzz,argv[2]);
+    importVector(damp,nzz,argv[3]);
+    importVector(source,nsrc,argv[4]);
 
+    setToZero(pas,pre,fut,nzz);
     for(int kk = 0; kk < nt; kk++) 
     {
-        if(kk % 200 == 0) printf("Tempo = %.2f segundos\n",dt*k);
-
-        if(kk < nsrc) pre[sx] =  /* applying the source in modeling */ 
-
-        acoustic1D_8E2T(pas,pre,fut,vel,nx,dx,dt);    
-
-        updateWavefield(pas,pre,fut,nx);
+        if(kk % (nt / 10) == 0) printf("Propagation time = %.2f segundos\n",dt*kk);
+        acoustic1D_8E2T(pas,pre,fut,vel,damp,source,kk,nsrc,nabc,nzz,dz,dt);    
+        getSnapshots1D(snap,fut,nzz,nabc,kk,nt,nSnap);
+        getSeismogram1D(seis,fut,nabc,kk);
+        updateWavefield(pas,pre,fut,nzz);
     }
 
-    tf = time(NULL);                /* Initializing the final time */
-    totalTime = difftime(tf, ti);   /* Calculating the difference between the initial and final times */
+    exportVector(snap,nz*nSnap,"results/snapshots.bin");
+    exportVector(seis,nt,"results/seismogram.bin");    
+
+    tf = time(NULL);                
+    totalTime = difftime(tf, ti);   
     printf("\nExecution time: \033[31m%.0fs\n\033[m", totalTime);
 
     return 0;
