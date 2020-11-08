@@ -149,10 +149,22 @@ void getSeismograms(float * seism, float * P_pre, float * xrec, float * zrec, in
     }
 }
 
-void getSnapshots(FILE * snap, float * P_pre, float vp, int nxx, int nzz)
+void getSnapshots(FILE * snap, float * snapshot, float * P_pre, float vp, int nxx, int nzz, int nabc, int time, int nt, int nsnap, float parVel)
 {
-    
+    if (time % (nt / nsnap))
+    {
+        for (int index = 0; index < nxx*nzz; index++)
+        {
+            int ii = floor(index / nxx);  
+            int jj = index % nxx;
 
+            if ((ii >= nabc) && (ii < nzz - nabc) && (jj >= nabc) && (jj < nxx - nabc))
+            {
+                snapshot[(ii-nabc)*(nxx-nabc) + (jj-nabc)] = P_pre[ii*nxx + jj] + parVel*vp[ii*nxx + jj];           
+            }    
+        }
+        fwrite(snapshot,sizeof(float),(nxx-nabc)*(nzz-nabc),snap);
+    }            
 }
 
 # endif

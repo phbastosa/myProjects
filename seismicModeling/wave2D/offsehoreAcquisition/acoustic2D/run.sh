@@ -53,10 +53,10 @@ xshotsFile="parameters/xsrc.txt"
 xrecpsFile="parameters/xrec.txt"
 zshotsFile="parameters/zsrc.txt"
 zrecpsFile="parameters/zrec.txt"
-python3 auxiliaries/buildGeometry.py $dx $ns $fs $ds $nrec $frec $drec $xshotsFile $xrecpsFile $abc
+python3 auxiliaries/buildGeometry.py $dx $ns $fs $ds $nrec $frec $drec $abc $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile 
 echo "Acquisition geometry was built..."
 
 parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$abc\n$nrec\n$ns\n$nsrc\n" > $parFileName
-echo "Parameters file for migration was built..."
+echo "Parameters file for modeling was built..."
 

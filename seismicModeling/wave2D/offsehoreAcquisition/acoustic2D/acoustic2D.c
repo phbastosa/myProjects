@@ -13,7 +13,7 @@ int main(int argc, char **argv)
     int absLayer,spread,nShots; 
     float parB,dx,dz,dt; 
 
-    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&absLayer,&parB,&spread,&nShots,&nsrc,argv[1]);
+    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&absLayer,&spread,&nShots,&nsrc,argv[1]);
 
     int nxx = nx + 2*absLayer;
     int nzz = nz + 2*absLayer;
@@ -28,44 +28,45 @@ int main(int argc, char **argv)
 
     char seismFile[100], snapsFile[100];
     float * seismogram = (float *) malloc(nt*spread*sizeof(float));
-    float * snapshots  = (float *) malloc(nxx*nzz*sizeof(float));
+    float * snapshots  = (float *) malloc(nx*nz*sizeof(float));
 
     int *xsrc = (int *) malloc(nShots*sizeof(int));         
     int *zsrc = (int *) malloc(nShots*sizeof(int));         
     int *xrec = (int *) malloc(nShots*spread*sizeof(int));      
     int *zrec = (int *) malloc(nShots*spread*sizeof(int));   
 
-    importVector2D(vp,nxx,nzz,argv[4]);
-    importVector2D(damp,nxx,nzz,argv[6]);
-    vels = getVelocities(nxx,nzz,vp);
+    // importVector2D(vp,nxx,nzz,argv[]);
+    // importVector2D(damp,nxx,nzz,argv[]);
+    // importVector(xsrc,nShots,argv[]);
+    // importVector(zsrc,nShots,argv[]);
+    // importVector(xrec,nShots*spread,argv[]);
+    // importVector(zrec,nShots*spread,argv[]);
+    // importVector(source,argv[]);
 
-    readIntegerTextParameter(xsrc,argv[3]);
-    readIntegerTextParameter(zsrc,argv[3]);
-    readIntegerTextParameter(xrec,argv[2]);
-    readIntegerTextParameter(zrec,argv[3]);
+    // vels = getVelocities(nxx,nzz,vp);
 
-    readFloatTextParameter(source,argv[5]);
+    // for(int shot = 0; shot < 1; ++shot) /* Shots loop */ 
+    // {        
+    //     setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
 
-    FILE * seis = fopen("asdfa","ab");
-    for(int shot = 0; shot < 1; ++shot) /* Shots loop */ 
-    {        
-        sprintf(snapsFile,"data/snapshots/",shot+1);   
-        FILE * snap = fopen(snapsFile,"ab");
-        
-        setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
+    //     sprintf(snapsFile,"data/snapshots/snaps_shot_%i.bin",shot+1);
+    //     sprintf(seismFile,"data/seismograms/shot_%i.bin",shot+1);   
+                
+    //     FILE * snap = fopen(snapsFile,"ab");
+    //     for(int time = 0; time < nt; ++time) /* Time loop */
+    //     {
+    //         propagationProgress(time,shot,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
+    //         FDM_8E2T_acoustic2D(shot,time,vp,P_pre,P_pas,P_fut,damp,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
+    //         getSeismograms(seismogram,P_pre,xrec,zrec,spread,nxx,shot,time);            
+    //         getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,time,nt,50,0);
+    //         waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
+    //     }
+    //     exportVector(seismogram,nt*spread,seismFile);
+    //     fclose(snap);
+    // }
 
-        for(int time = 0; time < nt; ++time) /* Time loop */
-        {
-            propagationProgress(time,shot,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
-            FDM_8E2T_acoustic2D(shot,time,vp,P_pre,P_pas,P_fut,damp,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
-            getSeismograms(seism,P_pre,xrec,zrec,spread,nxx,shot,time);            
-            
-            waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
-        }
-    }
-
-    t_f = time(NULL);                /* Initializing the final time */
-    total_time = difftime(t_f, t_0); /* Calculating the difference between the initial and final times */
+    t_f = time(NULL);                
+    total_time = difftime(t_f, t_0); 
     printf("\nExecution time: \033[31m%.0fs\n\033[m", total_time);
 
     return 0;
