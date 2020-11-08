@@ -44,8 +44,8 @@ inputDamp="model/damp.bin"
 python3 auxiliaries/buildCerjanABC.py $nx $nz $abc $par $inputDamp
 echo -e "Cerjan absorbing condition was built..."
 
-source="parameters/wavelet.txt"
-python3 auxiliaries/buildRicker.py $dt $nsrc $fcut $source
+sourceFile="parameters/wavelet.txt"
+python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceFile
 echo "Wavelet was built..."
 
 # Streamer geometry generation
@@ -60,3 +60,6 @@ parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$abc\n$nrec\n$ns\n$nsrc\n" > $parFileName
 echo "Parameters file for modeling was built..."
 
+gcc acoustic2D.c -lm -o run.exe
+./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
+rm run.exe

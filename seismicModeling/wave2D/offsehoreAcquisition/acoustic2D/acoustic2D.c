@@ -1,6 +1,7 @@
+# include <time.h>
+# include <math.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include <time.h>
 # include "auxiliaries/functions.h"
 
 int main(int argc, char **argv) 
@@ -35,13 +36,15 @@ int main(int argc, char **argv)
     int *xrec = (int *) malloc(nShots*spread*sizeof(int));      
     int *zrec = (int *) malloc(nShots*spread*sizeof(int));   
 
-    // importVector2D(vp,nxx,nzz,argv[]);
-    // importVector2D(damp,nxx,nzz,argv[]);
-    // importVector(xsrc,nShots,argv[]);
-    // importVector(zsrc,nShots,argv[]);
-    // importVector(xrec,nShots*spread,argv[]);
-    // importVector(zrec,nShots*spread,argv[]);
-    // importVector(source,argv[]);
+    importFloatVector(vp,nxx*nzz,argv[2]);
+    importFloatVector(damp,nxx*nzz,argv[3]);
+
+    importIntegerVector(xsrc,nShots,argv[4]);
+    importIntegerVector(zsrc,nShots,argv[5]);
+    importIntegerVector(xrec,nShots*spread,argv[6]);
+    importIntegerVector(zrec,nShots*spread,argv[7]);
+
+    importFloatVector(source,nsrc,argv[8]);
 
     // vels = getVelocities(nxx,nzz,vp);
 

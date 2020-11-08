@@ -28,4 +28,4 @@ nsrc = int(sys.argv[2])              # Quantidade de amostras na fonte
 fcut = float(sys.argv[3])            # Frequencia de pico da fonte 
 
 source = halfDerivative(rickerGenerator(fcut,nsrc,dt),dt)
-np.savetxt(str(sys.argv[4]),source,fmt="%.5f")
+source.astype("float32",order="C").tofile(sys.argv[4])

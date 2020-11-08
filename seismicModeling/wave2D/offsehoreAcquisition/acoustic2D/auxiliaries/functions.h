@@ -11,10 +11,17 @@ void setWaveField(float * p1, float * p2, float * p3, int n)
     } 
 }
 
-void importVector(float * vector, int nPoints, char filename[])
+void importFloatVector(float * vector, int nPoints, char filename[])
 {
     FILE * read = fopen((const char *) filename,"rb");
     fread(vector,sizeof(float),nPoints,read);
+    fclose(read);
+}
+
+void importIntegerVector(int * vector, int nPoints, char filename[])
+{
+    FILE * read = fopen((const char *) filename,"rb");
+    fread(vector,sizeof(int),nPoints,read);
     fclose(read);
 }
 
@@ -141,7 +148,7 @@ void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
     }
 }
 
-void getSeismograms(float * seism, float * P_pre, float * xrec, float * zrec, int nrec, int nxx, int shot, int time)
+void getSeismograms(float * seism, float * P_pre, int * xrec, int * zrec, int nrec, int nxx, int shot, int time)
 {
     for (int ii = 0; ii < nrec; ii++)
     {
@@ -149,7 +156,7 @@ void getSeismograms(float * seism, float * P_pre, float * xrec, float * zrec, in
     }
 }
 
-void getSnapshots(FILE * snap, float * snapshot, float * P_pre, float vp, int nxx, int nzz, int nabc, int time, int nt, int nsnap, float parVel)
+void getSnapshots(FILE * snap, float * snapshot, float * P_pre, float * vp, int nxx, int nzz, int nabc, int time, int nt, int nsnap, float parVel)
 {
     if (time % (nt / nsnap))
     {
