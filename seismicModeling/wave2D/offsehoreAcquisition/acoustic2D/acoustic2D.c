@@ -46,27 +46,27 @@ int main(int argc, char **argv)
 
     importFloatVector(source,nsrc,argv[8]);
 
-    // vels = getVelocities(nxx,nzz,vp);
+    vels = getVelocities(nxx,nzz,vp);
 
-    // for(int shot = 0; shot < 1; ++shot) /* Shots loop */ 
-    // {        
-    //     setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
+    for(int shot = 0; shot < 1; ++shot) /* Shots loop */ 
+    {        
+        setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
 
-    //     sprintf(snapsFile,"data/snapshots/snaps_shot_%i.bin",shot+1);
-    //     sprintf(seismFile,"data/seismograms/shot_%i.bin",shot+1);   
+        sprintf(snapsFile,"results/snapshots/snaps_shot_%i.bin",shot+1);
+        sprintf(seismFile,"results/seismograms/shot_%i.bin",shot+1);   
                 
-    //     FILE * snap = fopen(snapsFile,"ab");
-    //     for(int time = 0; time < nt; ++time) /* Time loop */
-    //     {
-    //         propagationProgress(time,shot,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
-    //         FDM_8E2T_acoustic2D(shot,time,vp,P_pre,P_pas,P_fut,damp,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
-    //         getSeismograms(seismogram,P_pre,xrec,zrec,spread,nxx,shot,time);            
-    //         getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,time,nt,50,0);
-    //         waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
-    //     }
-    //     exportVector(seismogram,nt*spread,seismFile);
-    //     fclose(snap);
-    // }
+        FILE * snap = fopen(snapsFile,"ab");
+        for(int timePointer = 0; timePointer < nt; ++timePointer) /* Time loop */
+        {
+            modelingStatus(shot,timePointer,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
+            FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,damp,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt,absLayer);
+            getSeismograms(seismogram,P_pre,xrec,zrec,spread,nxx,shot,timePointer);            
+            getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,50,0);
+            waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
+        }
+        exportVector(seismogram,nt*spread,seismFile);
+        fclose(snap);
+    }
 
     t_f = time(NULL);                
     total_time = difftime(t_f, t_0); 

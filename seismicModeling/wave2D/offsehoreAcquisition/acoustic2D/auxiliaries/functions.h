@@ -5,9 +5,7 @@ void setWaveField(float * p1, float * p2, float * p3, int n)
 {
     for(int i = 0; i < n; i++)
     {
-        p1[i] = 0.0f;
-        p2[i] = 0.0f;
-        p3[i] = 0.0f;
+        p1[i] = 0.0f; p2[i] = 0.0f; p3[i] = 0.0f;
     } 
 }
 
@@ -53,18 +51,14 @@ float * getVelocities(int nxx, int nzz, float * vp)
 
     for(int index = 0; index < nxx*nzz; ++index) 
     {
-        int ii = floor(index / nxx);  /* line indicator */
-        int jj = index % nxx;         /* column indicator */  
+        int ii = floor(index / nxx);  
+        int jj = index % nxx;           
 
-        /* Finding the highest velocity in the model */
-        if(v_max < vp[ii*nxx + jj]) v_max = vp[ii*nxx + jj]; 
-        
-        /* Finding the slowest velocity in the model */
+        if(v_max < vp[ii*nxx + jj]) v_max = vp[ii*nxx + jj];         
         if(v_min > vp[ii*nxx + jj]) v_min = vp[ii*nxx + jj]; 
     }
 
-    vels[0] = v_max;
-    vels[1] = v_min;    
+    vels[0] = v_max; vels[1] = v_min;    
  
     return vels;
 }
@@ -83,33 +77,31 @@ void printStatus(float * vels, float dx, float dz, float dt, int nxx, int nzz, i
     printf("   Vertical length of model = %.0f meters\n\n",dz*(nzz - 2*abc));
 }
 
-void shotStatus(int tt, int * xsrc, int n_shot, int * xrec, int spread, float dx, 
-                float dz, int nt, float * vels, float dt, int nxx, int nzz, int abc)
+void modelingStatus(int shot, int time, int * xsrc, int n_shot, int * xrec, int spread, float dx, 
+                    float dz, int nt, float * vels, float dt, int nxx, int nzz, int abc)
 {
-    system("clear");        
-    printStatus(vels,dx,dz,dt,nxx,nzz,abc,nt);    
-    printf("Modeling status:\n");
-    printf("   Shot position: %.1f meters\n",(xsrc[tt]-abc)*dx);
-    printf("   Recivers position: %.1f - %.1f meters\n",(xrec[tt*spread]-abc)*dx,(xrec[spread-1 + tt*spread]-abc)*dx);
-    printf("   Total progress: %.2f %%\n",(float) tt/n_shot * 100.0f);
-    printf("\nExported seismograms: %i of %i\n",tt,n_shot);
-}   
-
-void propagationProgress(int timePointer,int tt, int * xsrc, int n_shot, int * xrec, int spread, float dx, 
-                         float dz, int nt, float * vels, float dt, int nxx, int nzz, int abc)
-{
-    if(timePointer % 10 == 0)
+    if (time % (nt / 1000) == 0)
     {
-        shotStatus(tt,xsrc,n_shot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,abc);
-        printf("\n    Propagation progress: %.2f %%\n",(float) timePointer/nt * 100.0f);
+        system("clear");        
+        printStatus(vels,dx,dz,dt,nxx,nzz,abc,nt);    
+
+        printf("------------------------------------------------------\n");
+        printf("    Propagation progress: %.2f %%\n",(float) time/nt * 100.0f);
+        printf("------------------------------------------------------\n\n");
+
+        printf("Modeling status:\n");
+        printf("   Shot position: %.1f meters\n",(xsrc[shot]-abc)*dx);
+        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[shot*spread]-abc)*dx,(xrec[spread-1 + shot*spread]-abc)*dx);
+        printf("   Total progress: %.2f %%\n",(float) shot/n_shot * 100.0f);
+        printf("\nExported seismograms: %i of %i\n",shot,n_shot);
     }
-}
+}   
 
 void FDM_8E2T_acoustic2D(int shot, int time, float *vp, float *P_pre,
                          float *P_pas, float *P_fut,float *damp, float *source, int nsrc, int *z_src,
-                         int *x_src,int nxx,int nzz, float dx, float dz, float dt)
+                         int *x_src,int nxx,int nzz, float dx, float dz, float dt, int abc)
 {
-    for(int index = 0; index < nxx*nzz; ++index) /* Spatial loop */ 
+    for(int index = 0; index < nxx*nzz; ++index) 
     {
         int ii = floor(index / nxx);  /* Line indicator */
         int jj = index % nxx;         /* Column indicator */  
@@ -119,7 +111,7 @@ void FDM_8E2T_acoustic2D(int shot, int time, float *vp, float *P_pre,
             P_pre[z_src[shot]*nxx + x_src[shot]] = source[time] / (dx*dz); 
         }
 
-        if((ii > 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
+        if((ii >= abc) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
         {
             float d2_Px2 = (- 9.0f*(P_pre[ii*nxx + (jj-4)] + P_pre[ii*nxx + (jj+4)])
                         +   128.0f*(P_pre[ii*nxx + (jj-3)] + P_pre[ii*nxx + (jj+3)])
@@ -158,7 +150,7 @@ void getSeismograms(float * seism, float * P_pre, int * xrec, int * zrec, int nr
 
 void getSnapshots(FILE * snap, float * snapshot, float * P_pre, float * vp, int nxx, int nzz, int nabc, int time, int nt, int nsnap, float parVel)
 {
-    if (time % (nt / nsnap))
+    if (time % (nt / nsnap) == 0)
     {
         for (int index = 0; index < nxx*nzz; index++)
         {
@@ -167,10 +159,10 @@ void getSnapshots(FILE * snap, float * snapshot, float * P_pre, float * vp, int 
 
             if ((ii >= nabc) && (ii < nzz - nabc) && (jj >= nabc) && (jj < nxx - nabc))
             {
-                snapshot[(ii-nabc)*(nxx-nabc) + (jj-nabc)] = P_pre[ii*nxx + jj] + parVel*vp[ii*nxx + jj];           
+                snapshot[(ii-nabc)*(nxx-2*nabc) + (jj-nabc)] = P_pre[ii*nxx + jj] + parVel*vp[ii*nxx + jj];           
             }    
         }
-        fwrite(snapshot,sizeof(float),(nxx-nabc)*(nzz-nabc),snap);
+        fwrite(snapshot,sizeof(float),(nxx-2*nabc)*(nzz-2*nabc),snap);
     }            
 }
 

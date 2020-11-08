@@ -29,9 +29,9 @@ xrec += int(sys.argv[8])
 zsrc = np.ones(nshot,dtype=int) * int(sys.argv[8]) + 1
 zrec = np.ones(nshot*spread,dtype=int) * int(sys.argv[8]) 
 
-xsrc.astype("float32",order="C").tofile(sys.argv[9])
-zsrc.astype("float32",order="C").tofile(sys.argv[10])
+xsrc.astype("int32",order="C").tofile(sys.argv[9])
+zsrc.astype("int32",order="C").tofile(sys.argv[10])
 
 xrec = np.reshape(xrec,[nshot*spread])
-xrec.astype("float32",order="C").tofile(sys.argv[11])
-zrec.astype("float32",order="C").tofile(sys.argv[12])
+xrec.astype("int32",order="C").tofile(sys.argv[11])
+zrec.astype("int32",order="C").tofile(sys.argv[12])
