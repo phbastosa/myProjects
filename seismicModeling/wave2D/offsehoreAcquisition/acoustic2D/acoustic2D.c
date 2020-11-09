@@ -59,7 +59,8 @@ int main(int argc, char **argv)
         for(int timePointer = 0; timePointer < nt; ++timePointer) /* Time loop */
         {
             modelingStatus(shot,timePointer,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
-            FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,damp,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt,absLayer);
+            FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
+            cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx,nzz);
             getSeismograms(seismogram,P_pre,xrec,zrec,spread,nxx,shot,timePointer);            
             getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,50,0);
             waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);

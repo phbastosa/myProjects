@@ -13,7 +13,7 @@ dx=10      # horizontal discretization parameter
 dz=10      # vertical discretization parameter
 dt=0.001   # temporal discretization of modeling
 abc=100    # samples in Cerjan absorbing boundary condition 
-par=0.0005 # parameter to use in exponential function of damp
+par=0.0012 # parameter to use in exponential function of damp
 
 modelPath="model/marmousi2_vp_351x1700_dh10.bin"
 

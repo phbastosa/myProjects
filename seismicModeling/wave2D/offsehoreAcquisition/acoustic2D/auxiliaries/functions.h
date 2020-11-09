@@ -97,9 +97,8 @@ void modelingStatus(int shot, int time, int * xsrc, int n_shot, int * xrec, int 
     }
 }   
 
-void FDM_8E2T_acoustic2D(int shot, int time, float *vp, float *P_pre,
-                         float *P_pas, float *P_fut,float *damp, float *source, int nsrc, int *z_src,
-                         int *x_src,int nxx,int nzz, float dx, float dz, float dt, int abc)
+void FDM_8E2T_acoustic2D(int shot, int time, float * vp, float * P_pre, float * P_pas, float * P_fut,
+                        float * source, int nsrc, int * z_src, int * x_src, int nxx, int nzz, float dx, float dz, float dt)
 {
     for(int index = 0; index < nxx*nzz; ++index) 
     {
@@ -111,7 +110,7 @@ void FDM_8E2T_acoustic2D(int shot, int time, float *vp, float *P_pre,
             P_pre[z_src[shot]*nxx + x_src[shot]] = source[time] / (dx*dz); 
         }
 
-        if((ii >= abc) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
+        if((ii > 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
         {
             float d2_Px2 = (- 9.0f*(P_pre[ii*nxx + (jj-4)] + P_pre[ii*nxx + (jj+4)])
                         +   128.0f*(P_pre[ii*nxx + (jj-3)] + P_pre[ii*nxx + (jj+3)])
@@ -125,9 +124,19 @@ void FDM_8E2T_acoustic2D(int shot, int time, float *vp, float *P_pre,
                         +  8064.0f*(P_pre[(ii-1)*nxx + jj] + P_pre[(ii+1)*nxx + jj])
                         - 14350.0f*(P_pre[ii*nxx + jj]))/(5040.0f*powf(dz,2));
 
-            P_fut[ii*nxx + jj] = damp[ii*nxx + jj] * ((powf(dt,2.0f)*powf(vp[ii*nxx + jj],2.0f)
-                            * (d2_Px2 + d2_Pz2)) + 2.0f*P_pre[ii*nxx + jj] - P_pas[ii*nxx + jj]);
+            P_fut[ii*nxx + jj] = powf(dt,2.0f)*powf(vp[ii*nxx + jj],2.0f)
+            * (d2_Px2 + d2_Pz2) + 2.0f*P_pre[ii*nxx + jj] - P_pas[ii*nxx + jj];
         }
+    }
+}
+
+void cerjanAbsorbingBoundaryCondition(float * P_pas,float * P_pre,float * P_fut,float * damp, int nxx, int nzz)
+{
+    for (int index = 0; index < nxx*nzz; index++)
+    {
+        P_pas[index] *= damp[index];
+        P_pre[index] *= damp[index];
+        P_fut[index] *= damp[index];
     }
 }
 
