@@ -48,15 +48,15 @@ int main(int argc, char **argv)
 
     vels = getVelocities(nxx,nzz,vp);
 
-    for(int shot = 0; shot < 1; ++shot) /* Shots loop */ 
+    for(int shot = 0; shot < 1; ++shot) 
     {        
         setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
 
         sprintf(snapsFile,"results/snapshots/snaps_shot_%i.bin",shot+1);
-        sprintf(seismFile,"results/seismograms/shot_%i.bin",shot+1);   
+        sprintf(seismFile,"results/seismograms/seism_shot_%i.bin",shot+1);   
                 
         FILE * snap = fopen(snapsFile,"ab");
-        for(int timePointer = 0; timePointer < nt; ++timePointer) /* Time loop */
+        for(int timePointer = 0; timePointer < nt; ++timePointer) 
         {
             modelingStatus(shot,timePointer,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
             FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
