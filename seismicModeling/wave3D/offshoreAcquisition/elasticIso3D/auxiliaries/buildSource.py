@@ -1,6 +1,5 @@
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 
 def rickerGenerator(fcut,nsrc,dt):
     
@@ -25,12 +24,10 @@ def intRickerGenerator(ricker,dt):
 
     return intRicker
 
-dt = 0.001              # Parâmetro de discretização espacial
-nsrc = 500              # Quantidade de amostras na fonte
-fcut = 30.0             # Frequência de pico da fonte 
+dt = float(sys.argv[1])              # Parâmetro de discretização espacial
+nsrc = int(sys.argv[2])              # Quantidade de amostras na fonte
+fcut = float(sys.argv[3])            # Frequência de pico da fonte 
 
 source = intRickerGenerator(rickerGenerator(fcut,nsrc,dt),dt)
 
-plt.plot(source)
-plt.show()
-# source.astype("float32",order="C").tofile(sys.argv[4])
+source.astype("float32",order="C").tofile(sys.argv[4])

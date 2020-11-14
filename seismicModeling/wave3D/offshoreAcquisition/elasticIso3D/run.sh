@@ -6,61 +6,63 @@
 
 # Model parameters - Using marmousi 2 resized
 
-nx=1700    # horizontal samples in velocity model 
-nz=351     # vertical samples in velocity model
-nt=5000    # 
+nx=300     # horizontal samples in velocity model 
+ny=300     # horizontal samples in velocity model 
+nz=200     # vertical samples in velocity model
 dx=10      # horizontal discretization parameter 
+dy=10      # horizontal discretization parameter
 dz=10      # vertical discretization parameter
-dt=0.001   # temporal discretization of modeling
-abc=100    # samples in Cerjan absorbing boundary condition 
-par=0.0012 # parameter to use in exponential function of damp
 
-modelPath="model/marmousi2_vp_351x1700_dh10.bin"
+nt=2000    # Samles in time domain
+dt=0.001   # temporal discretization of modeling
+abc=50     # samples in Cerjan absorbing boundary condition 
+par=0.0025 # parameter to use in exponential function of damp
+
+referenceModel="model/planoParallelModel.txt"
+
+vpModelPath="model/vpModel.bin"
+vsModelPath="model/vsModel.bin"
+rhoModelPath="model/rhoModel.bin"
 
 # Source parameters 
 
 fcut=30    # frequency cutoff of source Ricker in Hz
-nsrc=600   # total samples of source 
+nsrc=500   # total samples of source 
 
-# Acquisition geometry
+# Acquisition geometry - Nodes configuration, shots between nodes
 
-fs=5000    # first source position in meters
-ds=20      # source spacing in meters 
-ns=600     # total source in modeling
-
-frec=4900  # nearest source receptor position in meters
-drec=-10   # receptor spacing in meters 
-nrec=491   # receptor group per shot (spread)
+nrecx=31   # number of receptors in x direction
+nrecy=31   # number of receptors in y direction
 
 ####################################################################### 
 # Processing - running auxiliary codes to build parameters 
 #######################################################################
 echo "Pre-contitioning parameters:"
 
-inputModel="model/vp_input.bin"
-python3 auxiliaries/buildBoundaries.py $nx $nz $abc $modelPath $inputModel
+vpInput="model/vpInput.bin"; vsInput="model/vsInput.bin"; rhoInput="model/rhoInput.bin";
+python3 auxiliaries/buildModel.py $referenceModel $nx $ny $nz $vpModelPath $vsModelPath $rhoModelPath
+python3 auxiliaries/buildBoundaries.py $nx $ny $nz $abc $vpModelPath $vsModelPath $rhoModelPath $vpInput $vsInput $rhoInput
 echo -e "\nModel was built..."
 
-inputDamp="model/damp.bin"
-python3 auxiliaries/buildCerjanABC.py $nx $nz $abc $par $inputDamp
+damp="model/damp3D.bin"
+python3 auxiliaries/buildCerjanABC.py $nx $ny $nz $abc $par $damp
 echo -e "Cerjan absorbing condition was built..."
 
-sourceFile="parameters/wavelet.txt"
-python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceFile
+sourceInput="parameters/source.bin"
+python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceInput
 echo "Wavelet was built..."
 
-# Streamer geometry generation
-xshotsFile="parameters/xsrc.txt"
-xrecpsFile="parameters/xrec.txt"
-zshotsFile="parameters/zsrc.txt"
-zrecpsFile="parameters/zrec.txt"
-python3 auxiliaries/buildGeometry.py $dx $ns $fs $ds $nrec $frec $drec $abc $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile 
+xsrc="parameters/xsrcPositions.bin"
+ysrc="parameters/ysrcPositions.bin"
+xrec="parameters/xrecPositions.bin"
+yrec="parameters/yrecPositions.bin"
+python3 auxiliaries/buildGeometry.py $nx $ny $nrecx $nrecy $abc $xrec $yrec $xsrc $ysrc
 echo "Acquisition geometry was built..."
 
 parFileName="parameters/modelingParameters.txt"
-echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$abc\n$nrec\n$ns\n$nsrc" > $parFileName
+echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc" > $parFileName
 echo "Parameters file for modeling was built..."
 
-gcc acoustic2D.c -lm -O3 -o run.exe
-./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
-rm run.exe
+# gcc acoustic2D.c -lm -O3 -o run.exe
+# ./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
+# rm run.exe

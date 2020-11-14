@@ -1,14 +1,11 @@
 import sys
 import numpy as np
-import matplotlib.pyplot as plt
 
-from mpl_toolkits import mplot3d
-
-nx = 300
-ny = 300
-nz = 300
-abcLayer = 50
-parameter = 0.005
+nx = int(sys.argv[1])
+ny = int(sys.argv[2])
+nz = int(sys.argv[3])
+abcLayer = int(sys.argv[4])
+parameter = float(sys.argv[5])
 
 nxx = nx + 2*abcLayer
 nyy = ny + 2*abcLayer
@@ -73,7 +70,6 @@ for i in range(abcLayer):
     dampYZ[nzz-abcLayer-1:nzz-i-1,i] = factor[i]
     dampXY[nyy-abcLayer-1:nyy-i-1,i] = factor[i]
     
-
     # Bottom right
     dampXZ[nzz-abcLayer-1:nzz-i,nxx-i-1] = factor[i]
     dampXZ[nzz-i-1,nxx-abcLayer-1:nxx-i] = factor[i]   
@@ -120,9 +116,4 @@ for i in range(abcLayer,nxx-abcLayer):
 for i in range(abcLayer,nzz-abcLayer):
     damp3D[i,:,:] = dampXY.T
 
-plt.figure(1,figsize=(10,10))
-plt.imshow(damp3D[310,:,:])
-plt.colorbar()
-plt.show()
-
-damp3D.astype("float32",order="C").tofile("testeBorda3D.bin")
+damp3D.astype("float32",order="C").tofile(sys.argv[6])
