@@ -2,7 +2,7 @@
 # include <math.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include "../../auxiliaryCodes/generalFunctions/functions.h"
+# include "auxiliaries/functions.h"
 
 int main(int argc, char **argv) 
 {
@@ -125,7 +125,6 @@ int main(int argc, char **argv)
     memSet(Vz,nx*ny*nz);
 
     FILE * ps = fopen("snapPs.bin","ab");
-    
     FILE * vx = fopen("snapVx.bin","ab");
     FILE * vy = fopen("snapVy.bin","ab");
     FILE * vz = fopen("snapVz.bin","ab");
