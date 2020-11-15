@@ -18,7 +18,7 @@ dt=0.001   # temporal discretization of modeling
 abc=50     # samples in Cerjan absorbing boundary condition 
 par=0.0025 # parameter to use in exponential function of damp
 
-referenceModel="model/planoParallelModel.txt"
+referenceModel="model/planoParalelo.txt"
 
 vpModelPath="model/vpModel.bin"
 vsModelPath="model/vsModel.bin"
@@ -64,6 +64,7 @@ parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc\n$horizon" > $parFileName
 echo "Parameters file for modeling was built..."
 
-gcc elasticIsotropic3D.c -lm -o run.exe
+gcc -fopenmp elasticIsotropic3D.c -lm -o run.exe
 ./run.exe $parFileName $vpInput $vsInput $rhoInput $damp $sourceInput $xsrc $ysrc $xrec $yrec
 rm run.exe
+rm model/*.bin parameters/*.bin parameters/*.txt

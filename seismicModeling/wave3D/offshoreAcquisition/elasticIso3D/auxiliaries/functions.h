@@ -1,40 +1,40 @@
 # ifndef FUNCTIONS_H_DEFINED
 # define FUNCTIONS_H_DEFINED
 
-void memSet(float * pointer, int n)
+void memSet(float*pointer,int n)
 {
     for(int i = 0; i < n; i++) pointer[i] = 0.0f;
 }
 
-void setWaveField(float * Vx, float * Vy, float * Vz, float * Txx, float * Tyy,float * Tzz, float * Txz, float * Tyz, float * Txy, int n)
+void setWaveField(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txz,float*Tyz,float*Txy,int n)
 {
     memSet(Vx,n);  memSet(Vy,n);  memSet(Vz,n);
     memSet(Txx,n); memSet(Tyy,n); memSet(Tzz,n);
     memSet(Txz,n); memSet(Tyz,n); memSet(Txy,n);
 }
 
-void importFloatVector(float * vector, int nPoints, char filename[])
+void importFloatVector(float*vector,int nPoints,char filename[])
 {
     FILE * read = fopen((const char *) filename,"rb");
     fread(vector,sizeof(float),nPoints,read);
     fclose(read);
 }
 
-void importIntegerVector(int * vector, int nPoints, char filename[])
+void importIntegerVector(int*vector,int nPoints,char filename[])
 {
     FILE * read = fopen((const char *) filename,"rb");
     fread(vector,sizeof(int),nPoints,read);
     fclose(read);
 }
 
-void exportVector(float * vector, int nPoints, char filename[])
+void exportVector(float*vector,int nPoints,char filename[])
 {
     FILE * write = fopen((const char *) filename, "wb");
     fwrite(vector, sizeof(float), nPoints, write);
     fclose(write);
 }
 
-void readParameters(int *nx, int *ny, int *nz, int *nt, float *dx, float *dy, float *dz, float *dt, int *abc, int *nrecx, int *nrecy, int *nsrc, int *wbh, char filename[])
+void readParameters(int*nx,int*ny,int*nz,int*nt,float*dx,float*dy,float*dz,float*dt,int*abc,int*nrecx,int*nrecy,int*nsrc,int*wbh,char filename[])
 {
     FILE * arq = fopen((const char *) filename,"r"); 
     if(arq != NULL) 
@@ -47,7 +47,7 @@ void readParameters(int *nx, int *ny, int *nz, int *nt, float *dx, float *dy, fl
     fclose(arq);
 } 
 
-void checkIndexes(int nxx, int nyy, int nzz)
+void checkIndexes(int nxx,int nyy,int nzz)
 {
     int contkk = 0; int contjj = 0; int contii = 0;
     for (int index = 0; index < nxx*nyy*nzz; index++)
@@ -63,9 +63,10 @@ void checkIndexes(int nxx, int nyy, int nzz)
     printf("matrizes = %i; colunas = %i; linhas = %i\n",contkk,contjj,contii);
 }
 
-/* Equação discretizada para propagação de ondas em meios elásticos isotrópicos 3D (Graves,1996) com matrizes indexadas. Autor: Paulo Bastos - GISIS/UFF, 22/07/2019 */
-void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*rho,float*M,float*L,float*source,int*xsrc,int*ysrc,int*zsrc,int nsrc,int timePointer,int shotPointer,int nx,int ny,int nz,float dx,float dy,float dz,float dt) 
+/* Equação discreta para propagação de ondas em meios elásticos isotrópicos 3D (Graves,1996) com matrizes indexadas. Autor: Paulo Bastos - GISIS/UFF, 22/07/2019 */
+void FDM8E2T_elasticIsotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*rho,float*M,float*L,float*source,int*xsrc,int*ysrc,int*zsrc,int nsrc,int timePointer,int shotPointer,int nx,int ny,int nz,float dx,float dy,float dz,float dt) 
 {
+    #pragma omp parallel for
     for(int index = 0; index < nx*ny*nz; index++) 
     {    
         int kk = floor(index/(nx*ny));          // indicador de matrizes (direção z)
@@ -82,19 +83,19 @@ void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy
         if((kk >= 3) && (kk < nz-4) && (ii >= 3) && (ii < ny-4) && (jj >= 3) && (jj < nx-4)) 
         {    
             float d_Vx_dx = (75.0f*(Vx[kk*ny*nx + ii*nx + (jj-3)] - Vx[kk*ny*nx + ii*nx + (jj+4)]) +
-                           1029.0f*(Vx[kk*ny*nx + ii*nx + (jj+3)] - Vx[kk*ny*nx + ii*nx + (jj-2)]) +
-                           8575.0f*(Vx[kk*ny*nx + ii*nx + (jj-1)] - Vx[kk*ny*nx + ii*nx + (jj+2)]) +
-                         128625.0f*(Vx[kk*ny*nx + ii*nx + (jj+1)] - Vx[kk*ny*nx + ii*nx + jj]))/(107520.0f*dx);
+                        1029.0f*(Vx[kk*ny*nx + ii*nx + (jj+3)] - Vx[kk*ny*nx + ii*nx + (jj-2)]) +
+                        8575.0f*(Vx[kk*ny*nx + ii*nx + (jj-1)] - Vx[kk*ny*nx + ii*nx + (jj+2)]) +
+                        128625.0f*(Vx[kk*ny*nx + ii*nx + (jj+1)] - Vx[kk*ny*nx + ii*nx + jj]))/(107520.0f*dx);
 
             float d_Vy_dy = (75.0f*(Vy[kk*ny*nx + (ii-3)*nx + jj] - Vy[kk*ny*nx + (ii+4)*nx + jj]) +
-                           1029.0f*(Vy[kk*ny*nx + (ii+3)*nx + jj] - Vy[kk*ny*nx + (ii-2)*nx + jj]) +
-                           8575.0f*(Vy[kk*ny*nx + (ii-1)*nx + jj] - Vy[kk*ny*nx + (ii+2)*nx + jj]) +
-                         128625.0f*(Vy[kk*ny*nx + (ii+1)*nx + jj] - Vy[kk*ny*nx + ii*nx + jj]))/(107520.0f*dy);
+                        1029.0f*(Vy[kk*ny*nx + (ii+3)*nx + jj] - Vy[kk*ny*nx + (ii-2)*nx + jj]) +
+                        8575.0f*(Vy[kk*ny*nx + (ii-1)*nx + jj] - Vy[kk*ny*nx + (ii+2)*nx + jj]) +
+                        128625.0f*(Vy[kk*ny*nx + (ii+1)*nx + jj] - Vy[kk*ny*nx + ii*nx + jj]))/(107520.0f*dy);
 
             float d_Vz_dz = (75.0f*(Vz[(kk-3)*ny*nx + ii*nx + jj] - Vz[(kk+4)*ny*nx + ii*nx + jj]) +
-                           1029.0f*(Vz[(kk+3)*ny*nx + ii*nx + jj] - Vz[(kk-2)*ny*nx + ii*nx + jj]) +
-                           8575.0f*(Vz[(kk-1)*ny*nx + ii*nx + jj] - Vz[(kk+2)*ny*nx + ii*nx + jj]) +
-                         128625.0f*(Vz[(kk+1)*ny*nx + ii*nx + jj] - Vz[kk*ny*nx + ii*nx + jj]))/(107520.0f*dz);
+                        1029.0f*(Vz[(kk+3)*ny*nx + ii*nx + jj] - Vz[(kk-2)*ny*nx + ii*nx + jj]) +
+                        8575.0f*(Vz[(kk-1)*ny*nx + ii*nx + jj] - Vz[(kk+2)*ny*nx + ii*nx + jj]) +
+                        128625.0f*(Vz[(kk+1)*ny*nx + ii*nx + jj] - Vz[kk*ny*nx + ii*nx + jj]))/(107520.0f*dz);
 
             Txx[index] += dt*((L[index] + 2*M[index])*d_Vx_dx + L[index]*(d_Vy_dy + d_Vz_dz));
             Tyy[index] += dt*((L[index] + 2*M[index])*d_Vy_dy + L[index]*(d_Vx_dx + d_Vz_dz));
@@ -104,14 +105,14 @@ void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy
         if((kk >= 0) && (kk < nz) && (ii > 3) && (ii < ny-3) && (jj > 3) && (jj < nx-3)) 
         {
             float d_Vx_dy = (75.0f*(Vx[kk*ny*nx + (ii-4)*nx + jj] - Vx[kk*ny*nx + (ii+3)*nx + jj]) +
-                           1029.0f*(Vx[kk*ny*nx + (ii+2)*nx + jj] - Vx[kk*ny*nx + (ii-3)*nx + jj]) +
-                           8575.0f*(Vx[kk*ny*nx + (ii-2)*nx + jj] - Vx[kk*ny*nx + (ii+1)*nx + jj]) +
-                         128625.0f*(Vx[kk*ny*nx + ii*nx + jj]     - Vx[kk*ny*nx + (ii-1)*nx + jj]))/(107520.0f*dy);
+                        1029.0f*(Vx[kk*ny*nx + (ii+2)*nx + jj] - Vx[kk*ny*nx + (ii-3)*nx + jj]) +
+                        8575.0f*(Vx[kk*ny*nx + (ii-2)*nx + jj] - Vx[kk*ny*nx + (ii+1)*nx + jj]) +
+                        128625.0f*(Vx[kk*ny*nx + ii*nx + jj]     - Vx[kk*ny*nx + (ii-1)*nx + jj]))/(107520.0f*dy);
 
             float d_Vy_dx = (75.0f*(Vy[kk*ny*nx + ii*nx + (jj-4)] - Vy[kk*ny*nx + ii*nx + (jj+3)]) +
-                           1029.0f*(Vy[kk*ny*nx + ii*nx + (jj+2)] - Vy[kk*ny*nx + ii*nx + (jj-3)]) +
-                           8575.0f*(Vy[kk*ny*nx + ii*nx + (jj-2)] - Vy[kk*ny*nx + ii*nx + (jj+1)]) +
-                         128625.0f*(Vy[kk*ny*nx + ii*nx + jj]     - Vy[kk*ny*nx + ii*nx + (jj-1)]))/(107520.0f*dx);
+                        1029.0f*(Vy[kk*ny*nx + ii*nx + (jj+2)] - Vy[kk*ny*nx + ii*nx + (jj-3)]) +
+                        8575.0f*(Vy[kk*ny*nx + ii*nx + (jj-2)] - Vy[kk*ny*nx + ii*nx + (jj+1)]) +
+                        128625.0f*(Vy[kk*ny*nx + ii*nx + jj]     - Vy[kk*ny*nx + ii*nx + (jj-1)]))/(107520.0f*dx);
 
             float M_xy = powf(0.25*(1/M[kk*ny*nx + (ii+1)*nx + (jj+1)] + 1/M[kk*ny*nx + ii*nx + (jj+1)] + 
                                     1/M[kk*ny*nx + (ii+1)*nx + jj]     + 1/M[kk*ny*nx + ii*nx + jj]),-1.0f);
@@ -122,14 +123,14 @@ void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy
         if((kk > 3) && (kk < nz-3) && (ii >= 0) && (ii < ny) && (jj > 3) && (jj < nx-3)) 
         {
             float d_Vx_dz = (75.0f*(Vx[(kk-4)*ny*nx + ii*nx + jj] - Vx[(kk+3)*ny*nx + ii*nx + jj]) +
-                           1029.0f*(Vx[(kk+2)*ny*nx + ii*nx + jj] - Vx[(kk-3)*ny*nx + ii*nx + jj]) +
-                           8575.0f*(Vx[(kk-2)*ny*nx + ii*nx + jj] - Vx[(kk+1)*ny*nx + ii*nx + jj]) +
-                         128625.0f*(Vx[kk*ny*nx + ii*nx + jj]     - Vx[(kk-1)*ny*nx + ii*nx + jj]))/(107520.0f*dz);
+                        1029.0f*(Vx[(kk+2)*ny*nx + ii*nx + jj] - Vx[(kk-3)*ny*nx + ii*nx + jj]) +
+                        8575.0f*(Vx[(kk-2)*ny*nx + ii*nx + jj] - Vx[(kk+1)*ny*nx + ii*nx + jj]) +
+                        128625.0f*(Vx[kk*ny*nx + ii*nx + jj]     - Vx[(kk-1)*ny*nx + ii*nx + jj]))/(107520.0f*dz);
 
             float d_Vz_dx = (75.0f*(Vz[kk*ny*nx + ii*nx + (jj-4)] - Vz[kk*ny*nx + ii*nx + (jj+3)]) +
-                           1029.0f*(Vz[kk*ny*nx + ii*nx + (jj+2)] - Vz[kk*ny*nx + ii*nx + (jj-3)]) +
-                           8575.0f*(Vz[kk*ny*nx + ii*nx + (jj-2)] - Vz[kk*ny*nx + ii*nx + (jj+1)]) +
-                         128625.0f*(Vz[kk*ny*nx + ii*nx + jj]     - Vz[kk*ny*nx + ii*nx + (jj-1)]))/(107520.0f*dx);
+                        1029.0f*(Vz[kk*ny*nx + ii*nx + (jj+2)] - Vz[kk*ny*nx + ii*nx + (jj-3)]) +
+                        8575.0f*(Vz[kk*ny*nx + ii*nx + (jj-2)] - Vz[kk*ny*nx + ii*nx + (jj+1)]) +
+                        128625.0f*(Vz[kk*ny*nx + ii*nx + jj]     - Vz[kk*ny*nx + ii*nx + (jj-1)]))/(107520.0f*dx);
 
             float M_xz = powf(0.25*(1/M[(kk+1)*ny*nx + ii*nx + (jj+1)] + 1/M[kk*ny*nx + ii*nx + (jj+1)] + 
                                     1/M[(kk+1)*ny*nx + ii*nx + jj]     + 1/M[kk*ny*nx + ii*nx + jj]),-1.0f);
@@ -140,14 +141,14 @@ void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy
         if((kk > 3) && (kk < nz-3) && (ii > 3) && (ii < ny-3) && (jj >= 0) && (jj < nx)) 
         {
             float d_Vy_dz = (75.0f*(Vy[(kk-4)*ny*nx + ii*nx + jj] - Vy[(kk+3)*ny*nx + ii*nx + jj]) +
-                           1029.0f*(Vy[(kk+2)*ny*nx + ii*nx + jj] - Vy[(kk-3)*ny*nx + ii*nx + jj]) +
-                           8575.0f*(Vy[(kk-2)*ny*nx + ii*nx + jj] - Vy[(kk+1)*ny*nx + ii*nx + jj]) +
-                         128625.0f*(Vy[kk*ny*nx + ii*nx + jj]     - Vy[(kk-1)*ny*nx + ii*nx + jj]))/(107520.0f*dz);
+                        1029.0f*(Vy[(kk+2)*ny*nx + ii*nx + jj] - Vy[(kk-3)*ny*nx + ii*nx + jj]) +
+                        8575.0f*(Vy[(kk-2)*ny*nx + ii*nx + jj] - Vy[(kk+1)*ny*nx + ii*nx + jj]) +
+                        128625.0f*(Vy[kk*ny*nx + ii*nx + jj]     - Vy[(kk-1)*ny*nx + ii*nx + jj]))/(107520.0f*dz);
 
             float d_Vz_dy = (75.0f*(Vz[kk*ny*nx + (ii-4)*nx + jj] - Vz[kk*ny*nx + (ii+3)*nx + jj]) +
-                           1029.0f*(Vz[kk*ny*nx + (ii+2)*nx + jj] - Vz[kk*ny*nx + (ii-3)*nx + jj]) +
-                           8575.0f*(Vz[kk*ny*nx + (ii-2)*nx + jj] - Vz[kk*ny*nx + (ii+1)*nx + jj]) +
-                         128625.0f*(Vz[kk*ny*nx + ii*nx + jj]     - Vz[kk*ny*nx + (ii-1)*nx + jj]))/(107520.0f*dy);
+                        1029.0f*(Vz[kk*ny*nx + (ii+2)*nx + jj] - Vz[kk*ny*nx + (ii-3)*nx + jj]) +
+                        8575.0f*(Vz[kk*ny*nx + (ii-2)*nx + jj] - Vz[kk*ny*nx + (ii+1)*nx + jj]) +
+                        128625.0f*(Vz[kk*ny*nx + ii*nx + jj]     - Vz[kk*ny*nx + (ii-1)*nx + jj]))/(107520.0f*dy);
 
             float M_yz = powf(0.25*(1/M[(kk+1)*ny*nx + (ii+1)*nx + jj] + 1/M[(kk+1)*ny*nx + ii*nx + jj] + 
                                     1/M[kk*ny*nx + (ii+1)*nx + jj] +     1/M[kk*ny*nx + ii*nx + jj]),-1.0f);
@@ -156,6 +157,7 @@ void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy
         }
     }
 
+    #pragma omp parallel for
     for(int index = 0; index < nx*ny*nz; index++) 
     {    
         int kk = floor(index/(nx*ny));          // indicador de matrizes (direção z)
@@ -230,9 +232,10 @@ void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy
     }    
 }
 
-void cerjanElasticAbsorbingCondition3D(float *Vx, float *Vy, float *Vz, float *Txx, float *Tyy, float *Tzz, float *Txy, float *Txz, float *Tyz, float *cubXYZ, int nxx, int nyy, int nzz)
+void cerjanElasticAbsorbingCondition3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*cubXYZ,int n)
 {
-    for(int index = 0; index < nxx*nyy*nzz; index++)    
+    #pragma omp parallel for
+    for(int index = 0; index < n; index++)    
     {
         Vx[index] *= cubXYZ[index];
         Vy[index] *= cubXYZ[index];
@@ -244,6 +247,27 @@ void cerjanElasticAbsorbingCondition3D(float *Vx, float *Vy, float *Vz, float *T
         Tyz[index] *= cubXYZ[index];
         Tzz[index] *= cubXYZ[index];
     }
+}
+
+void getPressureField(float*Txx,float*Tyy,float*Tzz,float*Pss,int n)
+{
+    #pragma omp parallel for
+    for (int index = 0; index < n; index++)
+    {
+        Pss[index] = (Txx[index] + Tyy[index] + Tzz[index])/3.0f;
+    }
+}
+
+void getSeismogram(float*seism,float*field,int*xrec,int*yrec,int*zrec,int nrecx,int nrecy,int nrecs,int nt,int nxx,int nyy,int nzz,int timePointer)
+{
+    #pragma omp parallel for
+    for (int index = 0; index < nrecs; index++)
+    {
+        int recx = index % nrecx;                          
+        int recy = floor((index % (nrecx*nrecy)) / nrecx);   
+
+        seism[timePointer*nrecx*nrecy + recy*nrecx + recx] = field[zrec[index]*nxx*nyy + yrec[index]*nxx + xrec[index]];
+    } 
 }
 
 # endif
