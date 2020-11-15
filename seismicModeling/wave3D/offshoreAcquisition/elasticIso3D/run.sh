@@ -6,8 +6,8 @@
 
 # Model parameters - Using marmousi 2 resized
 
-nx=300     # horizontal samples in velocity model 
-ny=300     # horizontal samples in velocity model 
+nx=200     # horizontal samples in velocity model 
+ny=200     # horizontal samples in velocity model 
 nz=200     # vertical samples in velocity model
 dx=10      # horizontal discretization parameter 
 dy=10      # horizontal discretization parameter
@@ -31,6 +31,7 @@ nsrc=500   # total samples of source
 
 # Acquisition geometry - Nodes configuration, shots between nodes
 
+horizon=50 # Water bottom horizon location in samples
 nrecx=31   # number of receptors in x direction
 nrecy=31   # number of receptors in y direction
 
@@ -60,9 +61,9 @@ python3 auxiliaries/buildGeometry.py $nx $ny $nrecx $nrecy $abc $xrec $yrec $xsr
 echo "Acquisition geometry was built..."
 
 parFileName="parameters/modelingParameters.txt"
-echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc" > $parFileName
+echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc\n$horizon" > $parFileName
 echo "Parameters file for modeling was built..."
 
-# gcc acoustic2D.c -lm -O3 -o run.exe
-# ./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
-# rm run.exe
+gcc elasticIsotropic3D.c -lm -o run.exe
+./run.exe $parFileName $vpInput $vsInput $rhoInput $damp $sourceInput $xsrc $ysrc $xrec $yrec
+rm run.exe
