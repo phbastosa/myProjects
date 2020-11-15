@@ -63,7 +63,7 @@ void checkIndexes(int nxx, int nyy, int nzz)
     printf("matrizes = %i; colunas = %i; linhas = %i\n",contkk,contjj,contii);
 }
 
-/* Equação discretizada para propagação de ondas em meios elásticos isotrópico 3D (Graves,1996) com matrizes indexadas. Autor: Paulo Bastos - GISIS, 22/07/2019 */
+/* Equação discretizada para propagação de ondas em meios elásticos isotrópicos 3D (Graves,1996) com matrizes indexadas. Autor: Paulo Bastos - GISIS/UFF, 22/07/2019 */
 void FDM_8E2T_elastic_Isotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*rho,float*M,float*L,float*source,int*xsrc,int*ysrc,int*zsrc,int nsrc,int timePointer,int shotPointer,int nx,int ny,int nz,float dx,float dy,float dz,float dt) 
 {
     for(int index = 0; index < nx*ny*nz; index++) 
@@ -245,7 +245,5 @@ void cerjanElasticAbsorbingCondition3D(float *Vx, float *Vy, float *Vz, float *T
         Tzz[index] *= cubXYZ[index];
     }
 }
-
-
 
 # endif
