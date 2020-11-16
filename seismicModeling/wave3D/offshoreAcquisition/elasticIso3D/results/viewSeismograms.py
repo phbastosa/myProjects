@@ -34,12 +34,14 @@ plt.figure(1,figsize=(15,10))
 for i in range(len(data)):
     plt.subplot(int("24"+str(i+1)))
     plt.imshow(data[i,:,yplain,:],aspect="auto",cmap="Greys")
-    plt.title(titles[i]+" X slice")
+    plt.title(titles[i]+" - Y slice")
+plt.savefig("results/seismogramsSliceY.png",dpi=200,bbox_inches="tight")
 
 plt.figure(2,figsize=(15,10))
 for i in range(len(data)):
     plt.subplot(int("24"+str(i+1)))
     plt.imshow(data[i,:,:,xplain],aspect="auto",cmap="Greys")
-    plt.title(titles[i]+" Y slice")
+    plt.title(titles[i]+" - X slice")
+plt.savefig("results/seismogramsSliceX.png",dpi=200,bbox_inches="tight")
 
 plt.show()

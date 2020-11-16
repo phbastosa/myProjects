@@ -37,7 +37,7 @@ nrecy=51   # number of receptors in y direction
 
 ####################################################################### 
 # Processing - running auxiliary codes to build parameters 
-#######################################################################
+######################################################################
 echo "Pre-contitioning parameters:"
 
 vpInput="model/vpInput.bin"; vsInput="model/vsInput.bin"; rhoInput="model/rhoInput.bin";
@@ -67,9 +67,7 @@ echo -e "Parameters file for modeling was built...\n\n"
 gcc -fopenmp elasticIsotropic3D.c -lm -o run.exe
 ./run.exe $parFileName $vpInput $vsInput $rhoInput $damp $sourceInput $xsrc $ysrc $xrec $yrec
 
-rm run.exe
-rm model/*.bin parameters/*.bin parameters/*.txt
-
 xplain=15
 yplain=25
 python3 results/viewSeismograms.py $nrecx $nrecy $nt $xplain $yplain
+
