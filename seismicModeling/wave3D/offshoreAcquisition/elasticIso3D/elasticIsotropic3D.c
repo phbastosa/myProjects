@@ -86,7 +86,7 @@ int main(int argc,char**argv)
     float * seismShx = (float *) malloc(nt*nrecs*sizeof(float));
     float * seismShy = (float *) malloc(nt*nrecs*sizeof(float));
 
-    for (int shotPointer = floor(nshot/2 - nrecx/2); shotPointer < floor(nshot/2 - nrecx/2 - 1); shotPointer++)
+    for (int shotPointer = floor(nshot/2 - nrecx/2); shotPointer < floor(nshot/2 - nrecx/2 + 1); shotPointer++)
     {
         setWaveField(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,nxx*nyy*nzz);
 

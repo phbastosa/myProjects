@@ -62,7 +62,7 @@ echo "Acquisition geometry was built..."
 
 parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc\n$horizon" > $parFileName
-echo "Parameters file for modeling was built...\n\n"
+echo -e "Parameters file for modeling was built...\n\n"
 
 gcc -fopenmp elasticIsotropic3D.c -lm -o run.exe
 ./run.exe $parFileName $vpInput $vsInput $rhoInput $damp $sourceInput $xsrc $ysrc $xrec $yrec

@@ -8,9 +8,9 @@ def readbinaryfile(dim1,dim2,dim3,filename):
         volume = np.reshape(data, [dim1,dim2,dim3], order='C')
     return volume
 
-nrecx = sys.argv[1]
-nrecy = sys.argv[2]
-nt = sys.argv[3]
+nrecx = int(sys.argv[1])
+nrecy = int(sys.argv[2])
+nt = int(sys.argv[3])
 
 seismVx = readbinaryfile(nt,nrecy,nrecx,"results/seismVx.bin")
 seismVy = readbinaryfile(nt,nrecy,nrecx,"results/seismVy.bin")
@@ -27,8 +27,8 @@ time = np.arange(nt)
 data = np.array([seismVx,seismVy,seismVz,seismPs,seismShx,seismShy,seismSv,seismP])
 titles = ["Vx","Vy","Vz","Pressure","Shx","Shy","Sv","P"]
 
-xplain = sys.argv[4]
-yplain = sys.argv[5]
+xplain = int(sys.argv[4])
+yplain = int(sys.argv[5])
 
 plt.figure(1,figsize=(15,10))
 for i in range(len(data)):
