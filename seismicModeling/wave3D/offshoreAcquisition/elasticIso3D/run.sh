@@ -69,3 +69,7 @@ gcc -fopenmp elasticIsotropic3D.c -lm -o run.exe
 
 rm run.exe
 rm model/*.bin parameters/*.bin parameters/*.txt
+
+xplain=15
+yplain=25
+python3 results/viewSeismograms.py $nrecx $nrecy $nt $xplain $yplain
