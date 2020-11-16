@@ -5,7 +5,7 @@
 # include <stdlib.h>
 # include "auxiliaries/functions.h"
 
-int main(int argc, char **argv) 
+int main(int argc,char**argv) 
 {
     float total_time;
     time_t t_0, t_f;
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
     float *Sv  = (float *) malloc(nxx*nyy*nzz*sizeof(float));
     float *Shx = (float *) malloc(nxx*nyy*nzz*sizeof(float));
     float *Shy = (float *) malloc(nxx*nyy*nzz*sizeof(float)); 
-    float *Ps = (float *) malloc(nxx*nyy*nzz*sizeof(float));
+    float *Ps  = (float *) malloc(nxx*nyy*nzz*sizeof(float));
 
     importFloatVector(vp,nxx*nyy*nzz,argv[2]);
     importFloatVector(vs,nxx*nyy*nzz,argv[3]);
@@ -65,8 +65,8 @@ int main(int argc, char **argv)
     int *yrec = (int *) malloc(nrecs*sizeof(int)); 
     int *zrec = (int *) malloc(nrecs*sizeof(int)); 
 
-    for (int i = 0; i < nshot; i++) zsrc[i] = nabc;
-    for (int i = 0; i < nrecs; i++) zrec[i] = wbh + nabc;
+    for (int i = 0; i < nshot; i++) zsrc[i] = nabc + 5;
+    for (int i = 0; i < nrecs; i++) zrec[i] = nabc + wbh;
 
     float *source = (float *) malloc(nsrc*sizeof(float));
     
@@ -80,8 +80,13 @@ int main(int argc, char **argv)
     float * seismVx = (float *) malloc(nt*nrecs*sizeof(float));
     float * seismVy = (float *) malloc(nt*nrecs*sizeof(float));
     float * seismVz = (float *) malloc(nt*nrecs*sizeof(float));
+    
+    float * seismP   = (float *) malloc(nt*nrecs*sizeof(float));
+    float * seismSv  = (float *) malloc(nt*nrecs*sizeof(float));
+    float * seismShx = (float *) malloc(nt*nrecs*sizeof(float));
+    float * seismShy = (float *) malloc(nt*nrecs*sizeof(float));
 
-    for (int shotPointer = 0; shotPointer < 1; shotPointer++)
+    for (int shotPointer = (nshot/2); shotPointer < (nshot/2 + 1); shotPointer++)
     {
         setWaveField(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,nxx*nyy*nzz);
 
@@ -91,13 +96,20 @@ int main(int argc, char **argv)
 
             FDM8E2T_elasticIsotropic3D(Vx,Vy,Vz,Txx,Tyy,Tzz,Txy,Txz,Tyz,rho,M,L,source,xsrc,ysrc,zsrc,nsrc,timePointer,shotPointer,nxx,nyy,nzz,dx,dy,dz,dt);        
             cerjanElasticAbsorbingCondition3D(Vx,Vy,Vz,Txx,Tyy,Tzz,Txy,Txz,Tyz,damp,nxx*nyy*nzz);
-        
-            getPressureField(Txx,Tyy,Tzz,Ps,nxx*nyy*nzz);
+                
+            getPressureWaveField(Txx,Tyy,Tzz,Ps,nxx*nyy*nzz);
+            getPWaveField(Vx,Vy,Vz,P,nxx,nyy,nzz,dx,dy,dz);
+            getSWaveField(Vx,Vy,Vz,Shx,Shy,Sv,nxx,nyy,nzz,dx,dy,dz);
 
-            getSeismogram(seismVx,Vx,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer);
-            getSeismogram(seismVy,Vy,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer);
-            getSeismogram(seismVz,Vz,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer);
-            getSeismogram(seismPs,Ps,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer);
+            getSeismogram(seismVx,Vx,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+            getSeismogram(seismVy,Vy,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+            getSeismogram(seismVz,Vz,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+            getSeismogram(seismPs,Ps,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+
+            getSeismogram(seismP,P,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+            getSeismogram(seismSv,Sv,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+            getSeismogram(seismShx,Shx,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
+            getSeismogram(seismShy,Shy,xrec,yrec,zrec,nrecx,nrecy,nrecs,nt,nxx,nyy,nzz,timePointer,nsrc,dt);
         }
     }
     
@@ -105,6 +117,11 @@ int main(int argc, char **argv)
     exportVector(seismVy,nt*nrecs,"results/seismVy.bin");
     exportVector(seismVz,nt*nrecs,"results/seismVz.bin");
     exportVector(seismPs,nt*nrecs,"results/seismPs.bin");
+
+    exportVector(seismP,nt*nrecs,"results/seismP.bin");
+    exportVector(seismSv,nt*nrecs,"results/seismSv.bin");
+    exportVector(seismShx,nt*nrecs,"results/seismShx.bin");
+    exportVector(seismShy,nt*nrecs,"results/seismShy.bin");
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);

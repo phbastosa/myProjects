@@ -33,7 +33,7 @@ nsrc=500   # total samples of source
 
 horizon=50 # Water bottom horizon location in samples
 nrecx=31   # number of receptors in x direction
-nrecy=31   # number of receptors in y direction
+nrecy=51   # number of receptors in y direction
 
 ####################################################################### 
 # Processing - running auxiliary codes to build parameters 
@@ -62,9 +62,10 @@ echo "Acquisition geometry was built..."
 
 parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc\n$horizon" > $parFileName
-echo "Parameters file for modeling was built..."
+echo "Parameters file for modeling was built...\n\n"
 
 gcc -fopenmp elasticIsotropic3D.c -lm -o run.exe
 ./run.exe $parFileName $vpInput $vsInput $rhoInput $damp $sourceInput $xsrc $ysrc $xrec $yrec
+
 rm run.exe
 rm model/*.bin parameters/*.bin parameters/*.txt
