@@ -4,7 +4,7 @@
 # User area - Fill the parameters
 ##########################################################################
 
-# Model parameters - Using marmousi 2 resized
+# Modeling parameters 
 
 nx=200     # horizontal samples in velocity model 
 ny=200     # horizontal samples in velocity model 
@@ -16,7 +16,7 @@ dz=10      # vertical discretization parameter
 nt=2000    # Samles in time domain
 dt=0.001   # temporal discretization of modeling
 abc=50     # samples in Cerjan absorbing boundary condition 
-par=0.0025 # parameter to use in exponential function of damp
+par=0.0015 # parameter to use in exponential function of damp
 
 referenceModel="model/planoParalelo.txt"
 
