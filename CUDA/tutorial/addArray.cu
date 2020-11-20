@@ -6,7 +6,7 @@
 __global__ void addInts(int * a, int * b, int n)
 {
     int index = blockIdx.x * blockDim.x + threadIdx.x;
-
+    
     if(index < n) a[index] += b[index];
 }
 
