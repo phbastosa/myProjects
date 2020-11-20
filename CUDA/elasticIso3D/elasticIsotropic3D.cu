@@ -113,15 +113,15 @@ int main(int argc,char**argv)
         }
     }
     
-    exportVector(seismVx,nt*nrecs,"results/seismVx.bin");
-    exportVector(seismVy,nt*nrecs,"results/seismVy.bin");
-    exportVector(seismVz,nt*nrecs,"results/seismVz.bin");
-    exportVector(seismPs,nt*nrecs,"results/seismPs.bin");
+    exportVector(seismVx,nt*nrecs,(char *)"results/seismVx.bin");
+    exportVector(seismVy,nt*nrecs,(char *)"results/seismVy.bin");
+    exportVector(seismVz,nt*nrecs,(char *)"results/seismVz.bin");
+    exportVector(seismPs,nt*nrecs,(char *)"results/seismPs.bin");
 
-    exportVector(seismP,nt*nrecs,"results/seismP.bin");
-    exportVector(seismSv,nt*nrecs,"results/seismSv.bin");
-    exportVector(seismShx,nt*nrecs,"results/seismShx.bin");
-    exportVector(seismShy,nt*nrecs,"results/seismShy.bin");
+    exportVector(seismP,nt*nrecs,(char *)"results/seismP.bin");
+    exportVector(seismSv,nt*nrecs,(char *)"results/seismSv.bin");
+    exportVector(seismShx,nt*nrecs,(char *)"results/seismShx.bin");
+    exportVector(seismShy,nt*nrecs,(char *)"results/seismShy.bin");
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);
