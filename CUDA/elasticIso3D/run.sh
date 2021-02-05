@@ -40,25 +40,25 @@ nrecy=51   # number of receptors in y direction
 ######################################################################
 echo "Pre-contitioning parameters:"
 
-# vpInput="model/vpInput.bin"; vsInput="model/vsInput.bin"; rhoInput="model/rhoInput.bin";
-# python3 auxiliaries/buildModel.py $referenceModel $nx $ny $nz $vpModelPath $vsModelPath $rhoModelPath
-# python3 auxiliaries/buildBoundaries.py $nx $ny $nz $abc $vpModelPath $vsModelPath $rhoModelPath $vpInput $vsInput $rhoInput
-# echo -e "\nModel was built..."
+vpInput="model/vpInput.bin"; vsInput="model/vsInput.bin"; rhoInput="model/rhoInput.bin";
+python3 auxiliaries/buildModel.py $referenceModel $nx $ny $nz $vpModelPath $vsModelPath $rhoModelPath
+python3 auxiliaries/buildBoundaries.py $nx $ny $nz $abc $vpModelPath $vsModelPath $rhoModelPath $vpInput $vsInput $rhoInput
+echo -e "\nModel was built..."
 
-# damp="model/damp3D.bin"
-# python3 auxiliaries/buildCerjanABC.py $nx $ny $nz $abc $par $damp
-# echo -e "Cerjan absorbing condition was built..."
+damp="model/damp3D.bin"
+python3 auxiliaries/buildCerjanABC.py $nx $ny $nz $abc $par $damp
+echo -e "Cerjan absorbing condition was built..."
 
-# sourceInput="parameters/source.bin"
-# python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceInput
-# echo "Wavelet was built..."
+sourceInput="parameters/source.bin"
+python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceInput
+echo "Wavelet was built..."
 
-# xsrc="parameters/xsrcPositions.bin"
-# ysrc="parameters/ysrcPositions.bin"
-# xrec="parameters/xrecPositions.bin"
-# yrec="parameters/yrecPositions.bin"
-# python3 auxiliaries/buildGeometry.py $nx $ny $nrecx $nrecy $abc $xrec $yrec $xsrc $ysrc
-# echo "Acquisition geometry was built..."
+xsrc="parameters/xsrcPositions.bin"
+ysrc="parameters/ysrcPositions.bin"
+xrec="parameters/xrecPositions.bin"
+yrec="parameters/yrecPositions.bin"
+python3 auxiliaries/buildGeometry.py $nx $ny $nrecx $nrecy $abc $xrec $yrec $xsrc $ysrc
+echo "Acquisition geometry was built..."
 
 parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc\n$horizon" > $parFileName
