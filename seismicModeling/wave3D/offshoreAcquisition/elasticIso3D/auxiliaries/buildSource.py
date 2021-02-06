@@ -8,13 +8,13 @@ def rickerGenerator(fcut,nsrc,dt):
     
     s = int(nsrc/2)
     for i in range(-s,s):
-        aux1 = 1 - 2 * pow(i*dt,2)*pow(fc,2)*pow(np.pi,2)
-        aux2 = np.exp(-pow(i*dt,2)*pow(fc,2)*pow(np.pi,2))
+        aux1 = 1.0-2.0*np.pi*pow(i*dt,2.0)*pow(fc,2.0)*pow(np.pi,2.0)
+        aux2 = np.exp(-np.pi*pow(i*dt,2.0)*pow(fc,2.0)*pow(np.pi,2.0))
         ricker[i + s] = aux1 * aux2 
 
     return ricker
 
-def intRickerGenerator(ricker,dt):    
+def intRickerGenerator(ricker):    
     
     intRicker = np.zeros(len(ricker))
      
@@ -28,6 +28,6 @@ dt = float(sys.argv[1])              # Parâmetro de discretização espacial
 nsrc = int(sys.argv[2])              # Quantidade de amostras na fonte
 fcut = float(sys.argv[3])            # Frequência de pico da fonte 
 
-source = intRickerGenerator(rickerGenerator(fcut,nsrc,dt),dt)
+source = intRickerGenerator(rickerGenerator(fcut,nsrc,dt))
 
 source.astype("float32",order="C").tofile(sys.argv[4])
