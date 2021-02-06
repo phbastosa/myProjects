@@ -27,7 +27,7 @@ yplain = int(sys.argv[5])
 time = np.arange(nt) * dt
 
 nrecs = nrecx*nrecy
-nshot = (nrecx-1)*(nrecy-1)
+nshot = nrecx*nrecy
 
 seismVx = readBinaryVolume(nt,nrecy,nrecx,"results/seismVx.bin")
 seismVy = readBinaryVolume(nt,nrecy,nrecx,"results/seismVy.bin")
@@ -64,7 +64,7 @@ plt.figure(3,figsize=(15,10))
 plt.scatter(recx[yplain,:],recy[yplain,:])
 plt.scatter(recx[:,xplain],recy[:,xplain])
 plt.scatter(recx[yplain,xplain],recy[yplain,xplain])
-plt.scatter(xsrc[int(nshot/2 - nrecx/2)],ysrc[int(nshot/2 - nrecx/2)])
+plt.scatter(xsrc[int(nshot/2)],ysrc[int(nshot/2)])
 plt.title("Geometria de aquisição",fontsize=20)
 plt.xlabel("Direção de nrecx",fontsize=15)
 plt.ylabel("Direção de nrecy",fontsize=15)
