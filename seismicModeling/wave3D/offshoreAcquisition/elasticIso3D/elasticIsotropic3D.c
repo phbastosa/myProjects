@@ -57,7 +57,7 @@ int main(int argc,char**argv)
     }
 
     int nrecs = nrecx*nrecy;
-    int nshot = (nrecx-1)*(nrecy-1);
+    int nshot = nrecx*nrecy;
    
     int *xsrc = (int *) malloc(nshot*sizeof(int)); 
     int *ysrc = (int *) malloc(nshot*sizeof(int)); 
@@ -89,7 +89,7 @@ int main(int argc,char**argv)
 
     float * zeroOffsetTrace = (float *) malloc(nt*sizeof(float));
 
-    for (int shotPointer = floor(nshot/2 - nrecx/2); shotPointer < floor(nshot/2 - nrecx/2 + 1); shotPointer++)
+    for (int shotPointer = floor(nshot/2); shotPointer < floor(nshot/2 + 1); shotPointer++)
     {
         setWaveField(Vx,Vy,Vz,Txx,Tyy,Tzz,Txz,Tyz,Txy,nxx*nyy*nzz);
 
