@@ -64,9 +64,9 @@ void checkIndexes(int nxx,int nyy,int nzz)
 }
 
 /* Equação discreta para propagação de ondas em meios elásticos isotrópicos 3D (Graves,1996) com matrizes indexadas. Autor: Paulo Bastos - GISIS/UFF, 22/07/2019 */
-void FDM8E2T_elasticIsotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*rho,float*M,float*L,float*source,int*xsrc,int*ysrc,int*zsrc,int nsrc,int timePointer,int shotPointer,int nx,int ny,int nz,float dx,float dy,float dz,float dt) 
+void FDM8E2T_elasticIsotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*rho,float*M,float*L,float*source,int*xsrc,int*ysrc,int*zsrc,int nsrc,int timePointer,int shotPointer,int nshot,int nx,int ny,int nz,float dx,float dy,float dz,float dt) 
 {
-    #pragma omp parallel for
+    #pragma acc parallel loop present(Vx[0:nx*ny*nz],Vy[0:nx*ny*nz],Vz[0:nx*ny*nz],Txx[0:nx*ny*nz],Tyy[0:nx*ny*nz],Tzz[0:nx*ny*nz],Txy[0:nx*ny*nz],Txz[0:nx*ny*nz],Tyz[0:nx*ny*nz],M[0:nx*ny*nz],L[0:nx*ny*nz],xsrc[0:nshot],ysrc[0:nshot],zsrc[0:nshot],source[0:nsrc])
     for(int index = 0; index < nx*ny*nz; index++) 
     {    
         int kk = floor(index/(nx*ny));          // indicador de matrizes (direção z)
@@ -157,7 +157,7 @@ void FDM8E2T_elasticIsotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,f
         }
     }
 
-    #pragma omp parallel for
+    #pragma acc parallel loop present(Vx[0:nx*ny*nz],Vy[0:nx*ny*nz],Vz[0:nx*ny*nz],Txx[0:nx*ny*nz],Tyy[0:nx*ny*nz],Tzz[0:nx*ny*nz],Txy[0:nx*ny*nz],Txz[0:nx*ny*nz],Tyz[0:nx*ny*nz],rho[0:nx*ny*nz])
     for(int index = 0; index < nx*ny*nz; index++) 
     {    
         int kk = floor(index/(nx*ny));          // indicador de matrizes (direção z)
@@ -234,7 +234,7 @@ void FDM8E2T_elasticIsotropic3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,f
 
 void cerjanElasticAbsorbingCondition3D(float*Vx,float*Vy,float*Vz,float*Txx,float*Tyy,float*Tzz,float*Txy,float*Txz,float*Tyz,float*cubXYZ,int n)
 {
-    #pragma omp parallel for
+    #pragma acc parallel loop present(Vx[0:n],Vy[0:n],Vz[0:n],Txx[0:n],Tyy[0:n],Tzz[0:n],Txy[0:n],Txz[0:n],Tyz[0:n])
     for(int index = 0; index < n; index++)    
     {
         Vx[index] *= cubXYZ[index];
@@ -251,7 +251,7 @@ void cerjanElasticAbsorbingCondition3D(float*Vx,float*Vy,float*Vz,float*Txx,floa
 
 void getPressureWaveField(float*Txx,float*Tyy,float*Tzz,float*Pss,int nPoints)
 {
-    #pragma omp parallel for
+    #pragma acc parallel loop present(Txx[0:nPoints],Tyy[0:nPoints],Tzz[0:nPoints],Pss[0:nPoints])
     for (int index = 0; index < nPoints; index++)
     {
         Pss[index] = (Txx[index] + Tyy[index] + Tzz[index])/3.0f;
@@ -347,17 +347,24 @@ void getSWaveField(float*Ux,float*Uy,float*Uz,float*Shx,float*Shy,float*Sv,int n
 
 void getSeismogram(float*seism,float*field,int*xrec,int*yrec,int*zrec,int nrecx,int nrecy,int nrecs,int nt,int nxx,int nyy,int nzz,int timePointer,int nsrc,float dt)
 {
-    if(timePointer > nsrc/2)
-    {
-        #pragma omp parallel for
+    // if(timePointer > nsrc/2)
+    // {
+        #pragma acc parallel loop present(seism[0:nt*nrecs],field[0:nxx*nyy*nzz],xrec[0:nrecs],yrec[0:nrecs],zrec[0:nrecs])
         for (int index = 0; index < nrecs; index++)
         {
             int recx = index % nrecx;                          
             int recy = floor((index % (nrecx*nrecy)) / nrecx);   
 
-            seism[timePointer*nrecx*nrecy + recy*nrecx + recx] = (timePointer - nsrc/2)*dt*field[zrec[index]*nxx*nyy + yrec[index]*nxx + xrec[index]];
+            // seism[timePointer*nrecx*nrecy + recy*nrecx + recx] = (timePointer - nsrc/2)*dt*field[zrec[index]*nxx*nyy + yrec[index]*nxx + xrec[index]];
+            seism[timePointer*nrecx*nrecy + recy*nrecx + recx] = field[zrec[index]*nxx*nyy + yrec[index]*nxx + xrec[index]];
         }
-    } 
+    // } 
+}
+
+void getTrace(float*trace,float*field,int shotPointer,int timePointer,int*xsrc,int*ysrc,int*zsrc,int nxx,int nyy,int nzz)
+{
+    trace[timePointer] = field[zsrc[shotPointer]*nxx*nyy + ysrc[shotPointer]*nxx + xsrc[shotPointer]];
 }
 
 # endif
+
