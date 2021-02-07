@@ -64,7 +64,8 @@ parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$ny\n$nz\n$nt\n$dx\n$dy\n$dz\n$dt\n$abc\n$nrecx\n$nrecy\n$nsrc\n$horizon" > $parFileName
 echo -e "Parameters file for modeling was built...\n\n"
 
-pgcc -acc -fast -ta=tesla,cc60 elasticIsotropic3D.c -lm -o run.exe
+#pgcc -acc -fast -ta=tesla,cc60 elasticIsotropic3D.c -lm -o run.exe
+gcc elasticIsotropic3D.c -lm -o run.exe
 ./run.exe $parFileName $vpInput $vsInput $rhoInput $damp $sourceInput $xsrc $ysrc $xrec $yrec
 rm run.exe
 
