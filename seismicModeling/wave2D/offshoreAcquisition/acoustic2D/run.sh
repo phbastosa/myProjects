@@ -4,63 +4,65 @@
 # User area - Fill the parameters
 ##########################################################################
 
-# Model parameters - Using marmousi 2 resized
+# Model parameters 
+nx=1700         # horizontal samples in models 
+nz=351          # vertical samples in models
+dx=10         # horizontal discretization parameter 
+dz=10         # vertical discretization parameter
 
-nx=1700    # horizontal samples in velocity model 
-nz=351     # vertical samples in velocity model
-nt=5000    # 
-dx=10      # horizontal discretization parameter 
-dz=10      # vertical discretization parameter
-dt=0.001   # temporal discretization of modeling
-abc=100    # samples in Cerjan absorbing boundary condition 
-par=0.0012 # parameter to use in exponential function of damp
+# Time parameters
+nt=5000         # total samples in time modeling 
+dt=0.001        # temporal discretization parameter
 
-modelPath="model/marmousi2_vp_351x1700_dh10.bin"
+# Cerjan damping parameters 
+nabc=50         # samples in Cerjan absorbing boundary condition 
+parb=0.0055      # parameter to use in exponential function of damp
 
-# Source parameters 
+# Acquisition Geometry parameters
+ns=1            # number of shots in modeling 
+ds=20           # sources spacing
+nr=400          # number of receivers in modeling
+dr=20           # receivers spacing
+spread=400      # active receivers per shot
+mOffset=100     # minimum offset in acquisition geometry
 
-fcut=30    # frequency cutoff of source Ricker in Hz
-nsrc=600   # total samples of source 
+# Source parameters
+fcut=30       # maximum frequency of Ricker source in Hz
+nsrc=600      # total samples of source 
+
+# Models filename
+vpPath="model/marmousi2_vp_351x1700_dh10.bin"
 
 # Acquisition geometry
-
-fs=5000    # first source position in meters
-ds=20      # source spacing in meters 
-ns=600     # total source in modeling
-
-frec=4900  # nearest source receptor position in meters
-drec=-10   # receptor spacing in meters 
-nrec=491   # receptor group per shot (spread)
+topoPath="parameters/topography.bin"
+xrecPath="parameters/xrec.bin"
+xsrcPath="parameters/xsrc.bin"
 
 ####################################################################### 
 # Processing - running auxiliary codes to build parameters 
 #######################################################################
 echo "Pre-contitioning parameters:"
 
-inputModel="model/vp_input.bin"
-python3 auxiliaries/buildBoundaries.py $nx $nz $abc $modelPath $inputModel
-echo -e "\nModel was built..."
+xrecPath="parameters/xrec.bin"; xsrcPath="parameters/xsrc.bin"
+python3 auxiliaries/buildEndOnGeometry.py $spread $dr $ns $mOffset $ds $dx $xsrcPath $xrecPath  
+echo -e "\nAcquisition was built..."
+
+inputModel="model/vpInput.bin"
+python3 auxiliaries/buildBoundaries.py $nx $nz $nabc $vpPath $inputModel
+echo -e "Model was built..."
 
 inputDamp="model/damp.bin"
-python3 auxiliaries/buildCerjanABC.py $nx $nz $abc $par $inputDamp
-echo -e "Cerjan absorbing condition was built..."
+python3 auxiliaries/buildCerjanABC.py $nx $nz $nabc $parb $inputDamp
+echo -e "Cerjan condition was built..."
 
-sourceFile="parameters/wavelet.txt"
+sourceFile="parameters/wavelet.bin"
 python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceFile
 echo "Wavelet was built..."
 
-# Streamer geometry generation
-xshotsFile="parameters/xsrc.txt"
-xrecpsFile="parameters/xrec.txt"
-zshotsFile="parameters/zsrc.txt"
-zrecpsFile="parameters/zrec.txt"
-python3 auxiliaries/buildGeometry.py $dx $ns $fs $ds $nrec $frec $drec $abc $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile 
-echo "Acquisition geometry was built..."
-
 parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$abc\n$nrec\n$ns\n$nsrc" > $parFileName
-echo "Parameters file for modeling was built..."
+echo "Modeling parameters was built..."
 
-gcc acoustic2D.c -lm -O3 -o run.exe
-./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
-rm run.exe
+# gcc acoustic2D.c -lm -O3 -o run.exe
+# ./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
+# rm run.exe
