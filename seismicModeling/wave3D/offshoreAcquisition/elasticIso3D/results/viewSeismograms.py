@@ -2,6 +2,8 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 
+from skimage import exposure 
+
 def readBinaryVolume(dim1,dim2,dim3,filename):
     with open(filename, 'rb') as f:    
         data   = np.fromfile(filename, dtype= np.float32, count= dim1*dim2*dim3)
@@ -14,6 +16,11 @@ def readBinaryArray(dim,filename):
         data = np.fromfile(filename, dtype= np.int32, count= dim)
     
     return data
+
+def perc(matrix,value):
+    p = np.percentile(matrix,[.5, value])                     
+    image = exposure.rescale_intensity(matrix,in_range=(p[0],p[1]),out_range=(0,255))   
+    return image   
 
 nrecx = int(sys.argv[1])
 nrecy = int(sys.argv[2])
@@ -49,14 +56,14 @@ titles = ["Vx","Vy","Vz","Pressure"]
 plt.figure(1,figsize=(15,10))
 for i in range(len(data)):
     plt.subplot(int("22"+str(i+1)))
-    plt.imshow(data[i,:,yplain,:],aspect="auto",cmap="Greys")
+    plt.imshow(perc(data[i,:,yplain,:],99),aspect="auto",cmap="Greys")
     plt.title(titles[i]+" - Y slice")
 plt.savefig("results/seismogramsSliceY.png",dpi=200,bbox_inches="tight")
 
 plt.figure(2,figsize=(15,10))
 for i in range(len(data)):
     plt.subplot(int("22"+str(i+1)))
-    plt.imshow(data[i,:,:,xplain],aspect="auto",cmap="Greys")
+    plt.imshow(perc(data[i,:,:,xplain],99),aspect="auto",cmap="Greys")
     plt.title(titles[i]+" - X slice")
 plt.savefig("results/seismogramsSliceX.png",dpi=200,bbox_inches="tight")
 
