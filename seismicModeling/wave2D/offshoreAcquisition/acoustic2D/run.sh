@@ -59,9 +59,9 @@ python3 auxiliaries/buildSource.py $dt $nsrc $fcut $sourceFile
 echo "Wavelet was built..."
 
 parFileName="parameters/modelingParameters.txt"
-echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$abc\n$nrec\n$ns\n$nsrc" > $parFileName
+echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nabc\n$nr\n$ns\n$nsrc\n$spread" > $parFileName
 echo "Modeling parameters was built..."
 
-gcc acoustic2D.c -lm -o run.exe
+gcc acoustic2D.c -lm -O3 -o run.exe
 ./run.exe $parFileName $inputModel $inputDamp $sourceFile $xsrcPath $xrecPath 
 rm run.exe

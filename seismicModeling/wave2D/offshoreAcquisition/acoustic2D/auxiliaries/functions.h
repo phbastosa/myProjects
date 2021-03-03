@@ -30,15 +30,15 @@ void exportVector(float * vector, int nPoints, char filename[])
     fclose(write);
 }
 
-void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, int *abc, int *spread, int *nShots, int *nsrc, char filename[])
+void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, int *abc, int *nrec, int *nShots, int *nsrc, int *spread, char filename[])
 {
     FILE * arq = fopen((const char *) filename,"r"); 
     if(arq != NULL) 
     {
         fscanf(arq,"%i",nx); fscanf(arq,"%i",nz); fscanf(arq,"%i",nt); 
         fscanf(arq,"%f",dx); fscanf(arq,"%f",dz); fscanf(arq,"%f",dt); 
-        fscanf(arq,"%i",abc); fscanf(arq,"%i",spread); 
-        fscanf(arq,"%i",nShots); fscanf(arq,"%i",nsrc); 
+        fscanf(arq,"%i",abc); fscanf(arq,"%i",nrec); fscanf(arq,"%i",nShots); 
+        fscanf(arq,"%i",nsrc); fscanf(arq,"%i",spread); 
     } 
     fclose(arq);
 }
@@ -91,11 +91,19 @@ void modelingStatus(int shot, int time, int * xsrc, int n_shot, int * xrec, int 
 
         printf("Modeling status:\n");
         printf("   Shot position: %.1f meters\n",(xsrc[shot]-abc)*dx);
-        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[shot*spread]-abc)*dx,(xrec[spread-1 + shot*spread]-abc)*dx);
+        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[shot]-abc)*dx,(xrec[shot+spread-1]-abc)*dx);
         printf("   Total progress: %.2f %%\n",(float) shot/n_shot * 100.0f);
         printf("\nExported seismograms: %i of %i\n",shot,n_shot);
     }
 }   
+
+void ajustCoordinates(int *xrec, int *xsrc, int *topo, int nabc, int nxx, int nrec, int nsrc)
+{
+    for (int ii = 0; ii < nrec; ii++) xrec[ii] += nabc;
+    for (int ii = 0; ii < nsrc; ii++) xsrc[ii] += nabc;    
+
+    for (int ii = 0; ii < nxx; ii++) topo[ii] = nabc + 5;    
+}
 
 void FDM_8E2T_acoustic2D(int shot, int time, float * vp, float * P_pre, float * P_pas, float * P_fut,
                         float * source, int nsrc, int * topo, int * x_src, int nxx, int nzz, float dx, float dz, float dt)
@@ -149,11 +157,11 @@ void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
     }
 }
 
-void getSeismograms(float * seism, float * P_pre, int * xrec, int * zrec, int nrec, int nxx, int shot, int time)
+void getSeismograms(float * seism, float * P_pre, int * xrec, int * topo, int nrec, int nxx, int shot, int time)
 {
     for (int ii = 0; ii < nrec; ii++)
     {
-        seism[time*nrec + ii] = P_pre[zrec[shot*nrec + ii]*nxx + xrec[shot*nrec + ii]];
+        seism[time*nrec + ii] = P_pre[topo[xrec[shot + ii]]*nxx + xrec[shot + ii]];
     }
 }
 
