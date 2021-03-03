@@ -98,7 +98,7 @@ void modelingStatus(int shot, int time, int * xsrc, int n_shot, int * xrec, int 
 }   
 
 void FDM_8E2T_acoustic2D(int shot, int time, float * vp, float * P_pre, float * P_pas, float * P_fut,
-                        float * source, int nsrc, int * z_src, int * x_src, int nxx, int nzz, float dx, float dz, float dt)
+                        float * source, int nsrc, int * topo, int * x_src, int nxx, int nzz, float dx, float dz, float dt)
 {
     for(int index = 0; index < nxx*nzz; ++index) 
     {
@@ -107,7 +107,7 @@ void FDM_8E2T_acoustic2D(int shot, int time, float * vp, float * P_pre, float * 
         
         if((time < nsrc) && (index == 0))
         { 
-            P_pre[z_src[shot]*nxx + x_src[shot]] = source[time] / (dx*dz); 
+            P_pre[topo[x_src[shot]]*nxx + x_src[shot]] = source[time] / (dx*dz); 
         }
 
         if((ii > 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 

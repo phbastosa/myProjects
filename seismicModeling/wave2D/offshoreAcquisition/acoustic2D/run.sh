@@ -5,8 +5,8 @@
 ##########################################################################
 
 # Model parameters 
-nx=1700         # horizontal samples in models 
-nz=351          # vertical samples in models
+nx=1700       # horizontal samples in models 
+nz=351        # vertical samples in models
 dx=10         # horizontal discretization parameter 
 dz=10         # vertical discretization parameter
 
@@ -34,7 +34,6 @@ nsrc=600      # total samples of source
 vpPath="model/marmousi2_vp_351x1700_dh10.bin"
 
 # Acquisition geometry
-topoPath="parameters/topography.bin"
 xrecPath="parameters/xrec.bin"
 xsrcPath="parameters/xsrc.bin"
 
@@ -43,7 +42,7 @@ xsrcPath="parameters/xsrc.bin"
 #######################################################################
 echo "Pre-contitioning parameters:"
 
-xrecPath="parameters/xrec.bin"; xsrcPath="parameters/xsrc.bin"
+xrecPath="parameters/xrec.bin"; xsrcPath="parameters/xsrc.bin" 
 python3 auxiliaries/buildEndOnGeometry.py $spread $dr $ns $mOffset $ds $dx $xsrcPath $xrecPath  
 echo -e "\nAcquisition was built..."
 
@@ -63,6 +62,6 @@ parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$abc\n$nrec\n$ns\n$nsrc" > $parFileName
 echo "Modeling parameters was built..."
 
-# gcc acoustic2D.c -lm -O3 -o run.exe
-# ./run.exe $parFileName $inputModel $inputDamp $xshotsFile $zshotsFile $xrecpsFile $zrecpsFile $sourceFile 
-# rm run.exe
+gcc acoustic2D.c -lm -o run.exe
+./run.exe $parFileName $inputModel $inputDamp $sourceFile $xsrcPath $xrecPath 
+rm run.exe

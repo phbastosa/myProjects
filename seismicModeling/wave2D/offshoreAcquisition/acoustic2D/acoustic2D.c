@@ -32,42 +32,40 @@ int main(int argc, char **argv)
     float * snapshots  = (float *) malloc(nx*nz*sizeof(float));
 
     int *xsrc = (int *) malloc(nShots*sizeof(int));         
-    int *zsrc = (int *) malloc(nShots*sizeof(int));         
     int *xrec = (int *) malloc(nShots*spread*sizeof(int));      
-    int *zrec = (int *) malloc(nShots*spread*sizeof(int));   
+    int *topo = (int *) malloc(nxx*sizeof(int));   
 
     importFloatVector(vp,nxx*nzz,argv[2]);
     importFloatVector(damp,nxx*nzz,argv[3]);
+    importFloatVector(source,nsrc,argv[4]);
 
-    importIntegerVector(xsrc,nShots,argv[4]);
-    importIntegerVector(zsrc,nShots,argv[5]);
+    importIntegerVector(xsrc,nShots,argv[5]);
     importIntegerVector(xrec,nShots*spread,argv[6]);
-    importIntegerVector(zrec,nShots*spread,argv[7]);
-
-    importFloatVector(source,nsrc,argv[8]);
 
     vels = getVelocities(nxx,nzz,vp);
 
-    for(int shot = 0; shot < 1; ++shot) 
-    {        
-        setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
+    for (int i = 0; i < nxx; i++) topo[i] = absLayer + 5; 
 
-        sprintf(snapsFile,"results/snapshots/snaps_shot_%i.bin",shot+1);
-        sprintf(seismFile,"results/seismograms/seism_shot_%i.bin",shot+1);   
+    // for(int shot = 0; shot < 1; ++shot) 
+    // {        
+    //     setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
+
+    //     sprintf(snapsFile,"results/snapshots/snaps_shot_%i.bin",shot+1);
+    //     sprintf(seismFile,"results/seismograms/seism_shot_%i.bin",shot+1);   
                 
-        FILE * snap = fopen(snapsFile,"ab");
-        for(int timePointer = 0; timePointer < nt; ++timePointer) 
-        {
-            modelingStatus(shot,timePointer,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
-            FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
-            cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx,nzz);
-            getSeismograms(seismogram,P_pre,xrec,zrec,spread,nxx,shot,timePointer);            
-            getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,50,0);
-            waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
-        }
-        exportVector(seismogram,nt*spread,seismFile);
-        fclose(snap);
-    }
+    //     FILE * snap = fopen(snapsFile,"ab");
+    //     for(int timePointer = 0; timePointer < nt; ++timePointer) 
+    //     {
+    //         modelingStatus(shot,timePointer,xsrc,nShots,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
+    //         FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,zsrc,xsrc,nxx,nzz,dx,dz,dt);
+    //         cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx,nzz);
+    //         getSeismograms(seismogram,P_pre,xrec,zrec,spread,nxx,shot,timePointer);            
+    //         getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,100,0.0001);
+    //         waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
+    //     }
+    //     exportVector(seismogram,nt*spread,seismFile);
+    //     fclose(snap);
+    // }
 
     t_f = time(NULL);                
     total_time = difftime(t_f, t_0); 
