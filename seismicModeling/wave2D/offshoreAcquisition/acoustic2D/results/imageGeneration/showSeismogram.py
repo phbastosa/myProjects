@@ -16,13 +16,13 @@ def readbinaryfile(dim1,dim2,filename):
         matrix = np.reshape(data, [dim1,dim2], order='F')
     return matrix.T
 
-nx = 400
-nt = 5000
+nx = int(sys.argv[1])
+nt = int(sys.argv[2])
 
-dx = 10
-dt = 0.001
+dx = float(sys.argv[3])
+dt = float(sys.argv[4])
 
-seism = readbinaryfile(nx,nt,"../seismograms/seism_shot_1.bin")[:,::-1]
+seism = readbinaryfile(nx,nt,sys.argv[5])[:,::-1]
 
 pseism = perc(seism,99.5)
 
@@ -44,4 +44,4 @@ plt.title("Sismograma de pressão hidrostática",fontsize=20)
 plt.xlabel("Distância [m]",fontsize=15)
 plt.ylabel("Tempo [s]",fontsize=15)
 plt.tight_layout()
-plt.savefig("../../sismograma.png",dpi=200,bbox_inches="tight")
+plt.savefig("sismograma.png",dpi=200,bbox_inches="tight")

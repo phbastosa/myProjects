@@ -67,7 +67,20 @@ echo "Modeling parameters was built..."
 gcc acoustic2D.c -lm -O3 -o run.exe
 ./run.exe $parFileName $inputModel $inputDamp $sourceFile $xsrcPath $xrecPath 
 
+clear
+
+seismPath="results/seismograms/seism_shot_1.bin"
+python3 results/imageGeneration/showSeismogram.py $spread $nt $dx $dt $seismPath
+echo "Seismogram image was generated"
+
+snapsPath="results/snapshots/snaps_shot_1.bin"
+python3 results/imageGeneration/showSnapshots.py $nx $nz $dx $nsnaps $snapsPath
+echo "Snapshots animation was generated"
+
 rm run.exe
 rm model/damp.bin model/vpInput.bin 
 rm parameters/* 
+
+
+
 
