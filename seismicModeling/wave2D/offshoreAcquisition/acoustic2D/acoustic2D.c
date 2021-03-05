@@ -62,7 +62,7 @@ int main(int argc, char **argv)
             FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,topo,xsrc,nxx,nzz,dx,dz,dt);
             cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx,nzz);
             getSeismograms(seismogram,P_pre,xrec,topo,spread,nxx,shot,timePointer);            
-            getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,100,1e-8);
+            getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,100,5e-8);
             waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
         }
         exportVector(seismogram,nt*spread,seismFile);
