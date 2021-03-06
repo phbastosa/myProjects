@@ -70,7 +70,7 @@ gcc acoustic2D.c -lm -O3 -o run.exe
 clear
 
 seismPath="results/seismograms/seism_shot_1.bin"
-python3 results/imageGeneration/showSeismogram.py $spread $nt $dx $dt $seismPath
+python3 results/imageGeneration/showSeismogram.py $spread $nt $ds $dt $seismPath
 echo "Seismogram image was generated"
 
 snapsPath="results/snapshots/snaps_shot_1.bin"
