@@ -4,7 +4,7 @@
 # include <iostream>
 # include "gameClass.h"
 
-using namespace std;
+using namespace std; // comment
 
 int main(int argc,char **argv)
 {
