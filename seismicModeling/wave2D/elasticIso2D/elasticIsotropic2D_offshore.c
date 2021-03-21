@@ -38,7 +38,6 @@ int main(int argc, char **argv)
     int *xsrc = (int *) malloc(nshot*sizeof(int));
     
     float *seism = (float *) malloc(spread*nt*sizeof(float));
-    float *data  = (float *) malloc(nshot*spread*nt*sizeof(float)); 
 
     importIntegerVector(xrec,nrec,argv[2]);
     importIntegerVector(xsrc,nshot,argv[3]);
@@ -81,12 +80,9 @@ int main(int argc, char **argv)
         #pragma acc exit data delete(rho[0:nxx*nzz],M[0:nxx*nzz],L[0:nxx*nzz],Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz])
         #pragma acc exit data delete(damp[0:nxx*nzz],topo[0:nxx],xrec[0:nrec],xsrc[0:nshot],source[0:nsrc])
         #pragma acc exit data copyout(seism[0:nt*spread])
-        
-        joiningSeismograms(seism,data,spread,nt,shotPointer);
     }
 
-    exportVector(data,nshot*spread*nt,"data/sintheticDataEngland.bin");
-    // exportVector(seism,spread*nt,"data/seism.bin");
+    exportVector(seism,spread*nt,"data/seism.bin");
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);

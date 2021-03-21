@@ -5,7 +5,7 @@ def readBinaryFloatMatrix(dim1,dim2,filename):
     with open(filename, 'rb') as f:    
         data   = np.fromfile(filename, dtype= np.float32, count= dim1*dim2)
         matrix = np.reshape(data, [dim1,dim2], order='C')
-    return matrix
+    return matrix.T
     
 nx = int(sys.argv[1])
 nz = int(sys.argv[2])
@@ -18,9 +18,9 @@ rhoPath = sys.argv[6]
 nxx = nx + 2*nabc
 nzz = nz + 2*nabc
 
-vp = readBinaryFloatMatrix(nz,nx,vpPath)
-vs = readBinaryFloatMatrix(nz,nx,vsPath)
-rho = readBinaryFloatMatrix(nz,nx,rhoPath)
+vp = readBinaryFloatMatrix(nx,nz,vpPath)
+vs = readBinaryFloatMatrix(nx,nz,vsPath)
+rho = readBinaryFloatMatrix(nx,nz,rhoPath)
 
 vpExpanded = np.zeros((nzz,nxx))
 vsExpanded = np.zeros((nzz,nxx))
@@ -50,10 +50,6 @@ for i in range(nabc):
     rhoExpanded[:,i] = rhoExpanded[:,nabc]
     rhoExpanded[:,nxx-i-1] = rhoExpanded[:,nxx-nabc-1]
 
-vpInput = vpExpanded[:,:]
-vsInput = vsExpanded[:,:]
-rhoInput = rhoExpanded[:,:]
-
-vpInput.astype("float32",order="C").tofile(sys.argv[7])
-vsInput.astype("float32",order="C").tofile(sys.argv[8])
-rhoInput.astype("float32",order="C").tofile(sys.argv[9])
+vpExpanded.astype("float32",order="C").tofile(sys.argv[7])
+vsExpanded.astype("float32",order="C").tofile(sys.argv[8])
+rhoExpanded.astype("float32",order="C").tofile(sys.argv[9])
