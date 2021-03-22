@@ -5,10 +5,10 @@
 ##########################################################################
 
 # Model parameters 
-nx=13601       # horizontal samples in models 
-nz=2801        # vertical samples in models
-dx=1.25        # horizontal discretization parameter 
-dz=1.25        # vertical discretization parameter
+nx=1701        # horizontal samples in models 
+nz=350         # vertical samples in models
+dx=10          # horizontal discretization parameter 
+dz=10          # vertical discretization parameter
 
 # Time parameters
 nt=10000       # total samples in time modeling 
@@ -27,13 +27,13 @@ spread=320     # active receivers per shot
 offsetMin=100  # minimum offset in acquisition geometry
 
 # Source parameters
-fcut=100       # maximum frequency of source Ricker in Hz
-nsrc=400       # total samples of source 
+fcut=30        # maximum frequency of source Ricker in Hz
+nsrc=800       # total samples of source 
 
 # Models filename
-vpPath="model/marmousi2_vp_13601x2801_dh1.25.bin"
-vsPath="model/marmousi2_vs_13601x2801_dh1.25.bin"
-rhoPath="model/marmousi2_rho_13601x2801_dh1.25.bin"
+vpPath="model/marmousi2_vp_1701x350_dh10.bin"
+vsPath="model/marmousi2_vs_1701x350_dh10.bin"
+rhoPath="model/marmousi2_rho_1701x350_dh10.bin"
 
 ####################################################################### 
 # Processing - running auxiliary codes to build parameters 
