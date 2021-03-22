@@ -64,4 +64,6 @@ pgcc -acc -fast -ta=tesla,cc60 elasticIsotropic2D_offshore.c -lm -o run.exe
 ./run.exe $parFileName $xrecPath $xsrcPath $sourcePath $vp $vs $rho $dampPath 
 rm run.exe
 
+rm parameters/*.bin parameters/*.txt
+
 transp n1=$spread n2=$nt <data/seism.bin | ximage n1=$nt d1=$dt n2=$spread d2=$dr perc=99 &
