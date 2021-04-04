@@ -49,7 +49,8 @@ int main(int argc, char **argv)
     for(int timePointer = 0; timePointer < nt; timePointer++) 
     {    
         if(timePointer % 200 == 0) printf("Propagation time = %0.5f seconds\n", (timePointer+200)*dt);
-                  
+
+        // FDM8E2T_shearStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);                  
         FDM8E2T_stressStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);
         // FDM8E2T_velocityStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);
 

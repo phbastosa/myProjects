@@ -252,11 +252,103 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
 
             float M_int = 0.5f*(M[jj + (ii+1)*nxx] + M[jj + ii*nxx]); 
 
-            Txz[index] += M_int*dt*(dVx_dz + dVz_dx);            
+            Txz[index] += dt*M_int*(dVx_dz + dVz_dx);            
         }      
     }
 }
 
+void FDM8E2T_shearStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, float *Tzz, float *Txz, float *rho, 
+                                              float *M, float *L, int nxx, int nzz, float dt, float dx, float dz,
+                                              int timePointer, float *source, int nsrc, int zsrc, int xsrc) 
+{
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
+    for(int index = 0; index < nxx*nzz; index++) 
+    {                  
+        int ii = (int) index / nxx;      /* Line indicator */
+        int jj = (int) index % nxx;      /* Column indicator */
+
+        if((timePointer < nsrc) && (index == 0))
+        {
+            Txx[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz); 
+            Tzz[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz); 
+        }
+
+        if((ii > 3) && (ii < nzz-3) && (jj > 3) && (jj < nxx-3)) 
+        {
+            float dVx_dx = (75.0f*(Vx[(jj-4) + ii*nxx] - Vx[(jj+3) + ii*nxx]) + 
+                          1029.0f*(Vx[(jj+2) + ii*nxx] - Vx[(jj-3) + ii*nxx]) +
+                          8575.0f*(Vx[(jj-2) + ii*nxx] - Vx[(jj+1) + ii*nxx]) + 
+                        128625.0f*(Vx[jj + ii*nxx]     - Vx[(jj-1) + ii*nxx]))/(107520.0f*dx);
+
+            float dVz_dz = (75.0f*(Vz[jj + (ii-4)*nxx] - Vz[jj + (ii+3)*nxx]) +   
+                          1029.0f*(Vz[jj + (ii+2)*nxx] - Vz[jj + (ii-3)*nxx]) +
+                          8575.0f*(Vz[jj + (ii-2)*nxx] - Vz[jj + (ii+1)*nxx]) +
+                        128625.0f*(Vz[jj + ii*nxx]     - Vz[jj + (ii-1)*nxx]))/(107520.0f*dz);     
+
+            float L_int = powf(0.25f*(1.0f/L[jj + (ii+1)*nxx] + 1.0f/L[jj + ii*nxx] + 1.0f/L[(jj+1) + ii*nxx] + 1.0f/L[(jj+1) + (ii+1)*nxx]),-1.0f);
+            float M_int = powf(0.25f*(1.0f/M[jj + (ii+1)*nxx] + 1.0f/M[jj + ii*nxx] + 1.0f/M[(jj+1) + ii*nxx] + 1.0f/M[(jj+1) + (ii+1)*nxx]),-1.0f);
+
+            Txx[index] += dt*((L_int + 2.0f*M_int)*dVx_dx + L_int*dVz_dz);   
+            Tzz[index] += dt*((L_int + 2.0f*M_int)*dVz_dz + L_int*dVx_dx);
+        }
+
+        if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
+        { 
+            float dVx_dz = (75*(Vx[jj + (ii-3)*nxx] - Vx[jj + (ii+4)*nxx]) +
+                          1029*(Vx[jj + (ii+3)*nxx] - Vx[jj + (ii-2)*nxx]) +
+                          8575*(Vx[jj + (ii-1)*nxx] - Vx[jj + (ii+2)*nxx]) +
+                        128625*(Vx[jj + (ii+1)*nxx] - Vx[jj + ii*nxx]))/(107520.0f*dz);
+
+            float dVz_dx = (75*(Vz[(jj-3) + ii*nxx] - Vz[(jj+4) + ii*nxx]) +
+                          1029*(Vz[(jj+3) + ii*nxx] - Vz[(jj-2) + ii*nxx]) +
+                          8575*(Vz[(jj-1) + ii*nxx] - Vz[(jj+2) + ii*nxx]) +
+                        128625*(Vz[(jj+1) + ii*nxx] - Vz[jj + ii*nxx]))/(107520.0f*dx);
+
+            Txz[index] += dt*M[index]*(dVx_dz + dVz_dx);            
+        }      
+    }
+
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
+    for(int index = 0; index < nxx*nzz; index++) 
+    {              
+        int ii = (int) index / nxx;      /* Line indicator */
+        int jj = (int) index % nxx;      /* Column indicator */ 
+
+        if((ii > 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) 
+        {
+            float dTxx_dx = (75.0f*(Txx[(jj-3) + ii*nxx] - Txx[(jj+4) + ii*nxx]) +
+                           1029.0f*(Txx[(jj+3) + ii*nxx] - Txx[(jj-2) + ii*nxx]) +
+                           8575.0f*(Txx[(jj-1) + ii*nxx] - Txx[(jj+2) + ii*nxx]) +
+                         128625.0f*(Txx[(jj+1) + ii*nxx] - Txx[jj + ii*nxx]))/(107520.0f*dx);
+
+            float dTxz_dz = (75.0f*(Txz[jj + (ii-4)*nxx] - Txz[jj + (ii+3)*nxx]) +
+                           1029.0f*(Txz[jj + (ii+2)*nxx] - Txz[jj + (ii-3)*nxx]) + 
+                           8575.0f*(Txz[jj + (ii-2)*nxx] - Txz[jj + (ii+1)*nxx]) +
+                         128625.0f*(Txz[jj + ii*nxx]     - Txz[jj + (ii-1)*nxx]))/(107520.0f*dz);
+
+            float rho_int = 0.5f*(rho[jj + ii*nxx] + rho[(jj+1) + ii*nxx]);
+
+            Vx[index] += dt/rho_int*(dTxx_dx + dTxz_dz);  
+        }
+
+        if((ii >= 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-3)) 
+        {
+            float dTxz_dx = (75.0f*(Txz[(jj-4) + ii*nxx] - Txz[(jj+3) + ii*nxx]) +
+                           1029.0f*(Txz[(jj+2) + ii*nxx] - Txz[(jj-3) + ii*nxx]) +
+                           8575.0f*(Txz[(jj-2) + ii*nxx] - Txz[(jj+1) + ii*nxx]) +
+                         128625.0f*(Txz[jj + ii*nxx]     - Txz[(jj-1) + ii*nxx]))/(107520.0f*dx);
+
+            float dTzz_dz = (75.0f*(Tzz[jj + (ii-3)*nxx] - Tzz[jj + (ii+4)*nxx]) + 
+                           1029.0f*(Tzz[jj + (ii+3)*nxx] - Tzz[jj + (ii-2)*nxx]) +
+                           8575.0f*(Tzz[jj + (ii-1)*nxx] - Tzz[jj + (ii+2)*nxx]) +
+                         128625.0f*(Tzz[jj + (ii+1)*nxx] - Tzz[jj + ii*nxx]))/(107520.0f*dz);
+
+            float rho_int = 0.5f*(rho[jj + ii*nxx] + rho[jj + (ii+1)*nxx]);
+
+            Vz[index] += dt/rho_int*(dTxz_dx + dTzz_dz); 
+        }
+    }
+}
 
 void getAcousticPressureSeismogram(float *seism, float *P, int nt, int nxx, int nzz, int timePointer, int zrec)
 {
