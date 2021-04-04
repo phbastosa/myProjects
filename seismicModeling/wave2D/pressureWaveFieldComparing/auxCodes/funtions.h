@@ -76,7 +76,7 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
                                               float *M, float *L, int nxx, int nzz, float dt, float dx, float dz, 
                                               int timePointer, float *source, int nsrc, int zsrc, int xsrc) 
 {   
-    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
     for(int index = 0; index < nxx*nzz; index++) 
     {                  
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
@@ -122,7 +122,7 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
         }          
     }
 
-    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
     for(int index = 0; index < nxx*nzz; index++) 
     {              
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
@@ -168,7 +168,7 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                                                 float *M, float *L, int nxx, int nzz, float dt, float dx, float dz,
                                                 int timePointer, float *source, int nsrc, int zsrc, int xsrc) 
 {
-    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
     for(int index = 0; index < nxx*nzz; index++) 
     {              
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
@@ -207,7 +207,7 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
         }
     }
 
-    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
     for(int index = 0; index < nxx*nzz; index++) 
     {                  
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
@@ -260,7 +260,7 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
 
 void getAcousticPressureSeismogram(float *seism, float *P, int nt, int nxx, int nzz, int timePointer, int zrec)
 {
-    #pragma acc parallel loop present(seism[0:nxx*nt],P[0:nxx*nzz])
+    # pragma acc parallel loop present(seism[0:nxx*nt],P[0:nxx*nzz])
     for(int index = 0; index < nxx; index++) 
     {
         seism[timePointer*nxx + index] = P[zrec*nxx + index];
@@ -269,7 +269,7 @@ void getAcousticPressureSeismogram(float *seism, float *P, int nt, int nxx, int 
 
 void getElasticIsotropicPressureSeismogram(float *seism, float *Txx, float *Tzz, int nt, int nxx, int nzz, int timePointer, int zrec)
 {
-    #pragma acc parallel loop present(seism[0:nxx*nt],Txx[0:nxx*nzz],Tzz[0:nxx*nzz])
+    # pragma acc parallel loop present(seism[0:nxx*nt],Txx[0:nxx*nzz],Tzz[0:nxx*nzz])
     for(int index = 0; index < nxx; index++) 
     {
         seism[timePointer*nxx + index] = (Txx[zrec*nxx + index] + Tzz[zrec*nxx + index])/2.0f;

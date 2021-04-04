@@ -44,8 +44,8 @@ int main(int argc, char **argv)
 
     importFloatVector(source,nsrc,argv[2]);
 
-    #pragma acc enter data copyin(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
-    #pragma acc enter data copyin(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc],seismogram[0:nx*nt])
+    # pragma acc enter data copyin(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
+    # pragma acc enter data copyin(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc],seismogram[0:nx*nt])
     for(int timePointer = 0; timePointer < nt; timePointer++) 
     {    
         if(timePointer % 200 == 0) printf("Propagation time = %0.5f seconds\n", (timePointer+200)*dt);
@@ -55,9 +55,9 @@ int main(int argc, char **argv)
 
         getElasticIsotropicPressureSeismogram(seismogram,Txx,Tzz,nt,nx,nz,timePointer,zrec);
     }
-    #pragma acc exit data delete(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
-    #pragma acc exit data delete(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc])
-    #pragma acc exit data copyout(seismogram[0:nx*nt])
+    # pragma acc exit data delete(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
+    # pragma acc exit data delete(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc])
+    # pragma acc exit data copyout(seismogram[0:nx*nt])
 
     exportVector(seismogram,nx*nt,"results/seismograms/pressureElasticIsotropic2D.bin");
 
