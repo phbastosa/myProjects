@@ -31,7 +31,7 @@ void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, 
 void FDM8E2T_acoustic2D(int timePointer, float *vp, float *P_pre, float *P_pas, float *P_fut, float *source, 
                         int nsrc, int xsrc, int zsrc, int nxx, int nzz, float dx, float dz, float dt)
 {
-
+    # pragma acc parallel loop present(vp[0:nxx*nzz],P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],source[0:nsrc])
     for(int index = 0; index < nxx*nzz; ++index) 
     {
         int ii = floor(index / nxx);  /* Line indicator */
@@ -64,6 +64,7 @@ void FDM8E2T_acoustic2D(int timePointer, float *vp, float *P_pre, float *P_pas, 
 
 void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
 {
+    # pragma acc parallel loop present(pas[0:nPoints],pre[0:nPoints],fut[0:nPoints])
     for(int index = 0; index < nPoints; ++index)
     {
         pas[index] = pre[index];         
@@ -259,7 +260,7 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
 
 void getAcousticPressureSeismogram(float *seism, float *P, int nt, int nxx, int nzz, int timePointer, int zrec)
 {
-    // #pragma acc parallel loop present(seism[0:nxx*nt],P[0:nxx*nzz])
+    #pragma acc parallel loop present(seism[0:nxx*nt],P[0:nxx*nzz])
     for(int index = 0; index < nxx; index++) 
     {
         seism[timePointer*nxx + index] = P[zrec*nxx + index];

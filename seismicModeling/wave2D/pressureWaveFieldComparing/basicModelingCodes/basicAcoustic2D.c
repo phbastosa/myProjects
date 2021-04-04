@@ -31,6 +31,8 @@ int main(int argc, char **argv)
 
     importFloatVector(source,nsrc,argv[2]);
 
+    # pragma acc enter data copyin(vp[0:nx*nz],Pb[0:nx*nz],Pc[0:nx*nz],Pf[0:nx*nz])
+    # pragma acc enter data copyin(source[0:nsrc],seismogram[0:nx*nt])
     for(int timePointer = 0; timePointer < nt; timePointer++) 
     {    
         if(timePointer % 200 == 0) printf("Propagation time = %0.5f seconds\n", (timePointer+200)*dt);
@@ -41,6 +43,8 @@ int main(int argc, char **argv)
         
         waveFieldUpdate(Pb,Pc,Pf,nx*nz);
     }
+    # pragma acc exit data delete(vp[0:nx*nz],Pb[0:nx*nz],Pc[0:nx*nz],Pf[0:nx*nz],source[0:nsrc])
+    # pragma acc exit data copyout(seismogram[0:nx*nt])
 
     exportVector(seismogram,nx*nt,"results/seismograms/pressureScalarAcoustic2D.bin");
 
