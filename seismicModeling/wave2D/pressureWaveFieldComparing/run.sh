@@ -15,7 +15,7 @@ nt=2000          # total samples in time modeling
 dt=0.001         # temporal discretization parameter
 
 # Simple shot acquisition
-xsrc=300         #
+xsrc=250         #
 zsrc=300         #
 zrec=100         #
 
@@ -35,9 +35,9 @@ python3 auxCodes/sourceGenerator.py $dt $nsrc $fcut $simpGridRicker $stagGridRic
 echo -e "\nWavelet was built..."
 
 parFileName="parameters/modelingParameters.txt"
-echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nsrc" > $parFileName
+echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nsrc\n$xsrc\n$zsrc\n$zrec" > $parFileName
 echo "Modeling parameters was built..."
 
-
-
-
+pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicElasticIsotropic2D.c -lm -o run.exe
+./run.exe $parFileName $stagGridRicker
+rm run.exe

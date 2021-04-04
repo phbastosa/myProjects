@@ -15,13 +15,34 @@ void exportVector(float * vector, int nPoints, char filename[])
     fclose(write);
 }
 
+void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, int *nsrc, int *xsrc, int *zsrc, int *zrec, char filename[])
+{
+    FILE * arq = fopen((const char *) filename,"r"); 
+    if(arq != NULL) 
+    {
+        fscanf(arq,"%i",nx); fscanf(arq,"%i",nz); fscanf(arq,"%i",nt); 
+        fscanf(arq,"%f",dx); fscanf(arq,"%f",dz); fscanf(arq,"%f",dt); 
+        fscanf(arq,"%i",nsrc); fscanf(arq,"%i",xsrc); fscanf(arq,"%i",zsrc); 
+        fscanf(arq,"%i",zrec);  
+    } 
+    fclose(arq);
+}
+
 void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, float *Tzz, float *Txz, float *rho, 
-                                              float *M, float *L, int nxx, int nzz, float dt, float dx, float dz) 
+                                              float *M, float *L, int nxx, int nzz, float dt, float dx, float dz, 
+                                              int timePointer, float *source, int nsrc, int zsrc, int xsrc) 
 {   
+    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
     for(int index = 0; index < nxx*nzz; index++) 
     {                  
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
         int jj = (int) index % nxx;      // indicador de colunas (direção x)
+
+        if((index == 0) && (timePointer < nsrc)) 
+        {
+            Txx[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);
+            Tzz[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);   
+        }
 
         if((ii >= 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) 
         {
@@ -35,8 +56,8 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
                           8575.0f*(Vz[jj + (ii-1)*nxx] - Vz[jj + (ii+2)*nxx]) +
                         128625.0f*(Vz[jj + (ii+1)*nxx] - Vz[jj + ii*nxx]))/(dz*107520.0f);     
 
-            Txx[index] += dt*((L[index] + 2*M[index])*dVx_dx + L[index]*dVz_dz);   
-            Tzz[index] += dt*((L[index] + 2*M[index])*dVz_dz + L[index]*dVx_dx);
+            Txx[index] += dt*((L[index] + 2.0f*M[index])*dVx_dx + L[index]*dVz_dz);   
+            Tzz[index] += dt*((L[index] + 2.0f*M[index])*dVz_dz + L[index]*dVx_dx);
         }
     
         if((ii > 3) && (ii < nzz-3) && (jj > 3) && (jj < nxx-3)) 
@@ -51,12 +72,13 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
                           8575.0f*(Vx[jj + (ii-2)*nxx] - Vx[jj + (ii+1)*nxx]) +
                         128625.0f*(Vx[jj + ii*nxx]     - Vx[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float M_int = powf(0.25*(1/M[jj + (ii+1)*nxx] + 1/M[(jj+1) + ii*nxx] + 1/M[(jj+1) + (ii+1)*nxx] + 1/M[jj + ii*nxx]),-1); 
+            float M_int = powf(0.25f*(1.0f/M[jj + (ii+1)*nxx] + 1.0f/M[(jj+1) + ii*nxx] + 1.0f/M[(jj+1) + (ii+1)*nxx] + 1.0f/M[jj + ii*nxx]),-1.0f); 
 
             Txz[index] += dt*M_int*(dVx_dz + dVz_dx);            
         }          
     }
 
+    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
     for(int index = 0; index < nxx*nzz; index++) 
     {              
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
@@ -99,8 +121,10 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
 }
 
 void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, float *Tzz, float *Txz, float *rho, 
-                                                float *M, float *L, int nxx, int nzz, float dt, float dx, float dz) 
+                                                float *M, float *L, int nxx, int nzz, float dt, float dx, float dz,
+                                                int timePointer, float *source, int nsrc, int zsrc, int xsrc) 
 {
+    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],rho[0:nxx*nzz])
     for(int index = 0; index < nxx*nzz; index++) 
     {              
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
@@ -133,16 +157,23 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                            8575.0f*(Tzz[jj + (ii-2)*nxx] - Tzz[jj + (ii+1)*nxx]) +
                          128625.0f*(Tzz[jj + ii*nxx]     - Tzz[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float rho_int = powf(0.25*(1/rho[jj + ii*nxx] + 1/rho[jj + (ii+1)*nxx] + 1/rho[(jj+1) + (ii+1)*nxx] + 1/rho[(jj+1) + ii*nxx]),-1);
+            float rho_int = powf(0.25f*(1.0f/rho[jj + ii*nxx] + 1.0f/rho[jj + (ii+1)*nxx] + 1.0f/rho[(jj+1) + (ii+1)*nxx] + 1.0f/rho[(jj+1) + ii*nxx]),-1.0f);
 
             Vz[index] += dt/rho_int*(dTxz_dx + dTzz_dz); 
         }
     }
-    
+
+    #pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz],L[0:nxx*nzz],M[0:nxx*nzz],source[0:nsrc])
     for(int index = 0; index < nxx*nzz; index++) 
     {                  
         int ii = (int) index / nxx;      // indicador de linhas  (direção z)
         int jj = (int) index % nxx;      // indicador de colunas (direção x)
+
+        if((index == 0) && (timePointer < nsrc)) 
+        {
+            Txx[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);
+            Tzz[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);   
+        }
 
         if((ii >= 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-3)) 
         {
@@ -156,12 +187,11 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                           8575.0f*(Vz[jj + (ii-1)*nxx] - Vz[jj + (ii+2)*nxx]) +
                         128625.0f*(Vz[jj + (ii+1)*nxx] - Vz[jj + ii*nxx]))/(dz*107520.0f);     
 
-            float L_int = 0.5*(L[(jj+1) + ii*nxx] + L[jj + ii*nxx]);
-            float M_int = 0.5*(M[(jj+1) + ii*nxx] + M[jj + ii*nxx]);
+            float L_int = 0.5f*(L[(jj+1) + ii*nxx] + L[jj + ii*nxx]);
+            float M_int = 0.5f*(M[(jj+1) + ii*nxx] + M[jj + ii*nxx]);
 
-            Txx[index] += dt*((L_int + 2*M_int)*dVx_dx + L_int*dVz_dz);   
-        
-            Tzz[index] += dt*((L_int + 2*M_int)*dVz_dz + L_int*dVx_dx);
+            Txx[index] += dt*((L_int + 2.0f*M_int)*dVx_dx + L_int*dVz_dz);   
+            Tzz[index] += dt*((L_int + 2.0f*M_int)*dVz_dz + L_int*dVx_dx);
         }
 
         if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
@@ -176,10 +206,19 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                           8575.0f*(Vx[jj + (ii-2)*nxx] - Vx[jj + (ii+1)*nxx]) +
                         128625.0f*(Vx[jj + ii*nxx]     - Vx[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float M_int = 0.5*(M[jj + (ii+1)*nxx] + M[jj + ii*nxx]); 
+            float M_int = 0.5f*(M[jj + (ii+1)*nxx] + M[jj + ii*nxx]); 
 
             Txz[index] += M_int*dt*(dVx_dz + dVz_dx);            
         }      
+    }
+}
+
+void getElasticIsotropicPressureSeismogram(float * seism, float * Txx, float * Tzz, int nt, int nxx, int nzz, int timePointer, int zrec)
+{
+    #pragma acc parallel loop present(seism[0:nxx*nt],Txx[0:nxx*nzz],Tzz[0:nxx*nzz])
+    for(int index = 0; index < nxx; index++) 
+    {
+        seism[timePointer*nxx + index] = (Txx[zrec*nxx + index] + Tzz[zrec*nxx + index])/2.0f;
     }
 }
 

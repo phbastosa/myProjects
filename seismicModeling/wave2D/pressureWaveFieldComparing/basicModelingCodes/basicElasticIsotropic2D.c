@@ -7,67 +7,60 @@
 
 int main(int argc, char **argv) 
 {
+    printf("\n\nBasic elastic isotropic modeling\n");
+
     float total_time;
     time_t t_0, t_f;
     t_0 = time(NULL);
 
-    int nsrc = 400;
-    int nt = 2000;
-    int nxx = 500; 
-    int nzz = 500;
+    int nx, nz, nt, nsrc;
+    int xsrc, zsrc, zrec;
+    float dx, dz, dt;
 
-    float *seismogram = (float *) malloc(nxx*nt*sizeof(float));
+    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nsrc,&xsrc,&zsrc,&zrec,argv[1]);
 
-    float *vp  = (float *) malloc(nxx*nzz*sizeof(float));  
-    float *vs  = (float *) malloc(nxx*nzz*sizeof(float));
-    float *rho = (float *) malloc(nxx*nzz*sizeof(float));
-    float *M   = (float *) malloc(nxx*nzz*sizeof(float));
-    float *L   = (float *) malloc(nxx*nzz*sizeof(float));
-    float *Vx  = (float *) malloc(nxx*nzz*sizeof(float));
-    float *Vz  = (float *) malloc(nxx*nzz*sizeof(float));
-    float *Txx = (float *) malloc(nxx*nzz*sizeof(float));
-    float *Tzz = (float *) malloc(nxx*nzz*sizeof(float));
-    float *Txz = (float *) malloc(nxx*nzz*sizeof(float));
+    float *seismogram = (float *) malloc(nx*nt*sizeof(float));
+
+    float *vp  = (float *) malloc(nx*nz*sizeof(float));  
+    float *vs  = (float *) malloc(nx*nz*sizeof(float));
+    float *rho = (float *) malloc(nx*nz*sizeof(float));
+    float *M   = (float *) malloc(nx*nz*sizeof(float));
+    float *L   = (float *) malloc(nx*nz*sizeof(float));
+    float *Vx  = (float *) malloc(nx*nz*sizeof(float));
+    float *Vz  = (float *) malloc(nx*nz*sizeof(float));
+    float *Txx = (float *) malloc(nx*nz*sizeof(float));
+    float *Tzz = (float *) malloc(nx*nz*sizeof(float));
+    float *Txz = (float *) malloc(nx*nz*sizeof(float));
     
     float *source = (float *) malloc(nsrc*sizeof(float));
     
-    importFloatVector(source,nsrc,"staggeredRicker.bin");
-    
-    for(int index = 0; index < nxx*nzz; index++) 
+    for(int index = 0; index < nx*nz; index++) 
     {
-        vp[index] = 2000;
-        vs[index] = vp[index]/sqrt(3);
-        rho[index] = 310*pow(vp[index],0.25);
-        M[index] = rho[index]*pow(vs[index],2.0);
-        L[index] = rho[index]*pow(vp[index],2.0) - 2*M[index];
+        vp[index] = 2000.0f;
+        vs[index] = vp[index]/1.7f;
+        rho[index] = 310.0f*powf(vp[index],0.25f);
+        M[index] = rho[index]*powf(vs[index],2.0f);
+        L[index] = rho[index]*powf(vp[index],2.0f) - 2.0f*M[index];
     }
 
-    float dx = 5.0;           
-    float dz = 5.0;
-    float dt = 0.001;        
+    importFloatVector(source,nsrc,argv[2]);
 
-    for(int kk = 0; kk < nt; kk++) 
+    #pragma acc enter data copyin(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
+    #pragma acc enter data copyin(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc],seismogram[0:nx*nt])
+    for(int timePointer = 0; timePointer < nt; timePointer++) 
     {    
-        if(kk < nsrc) 
-        {
-            Tzz[(250)*nxx + 250] += source[kk] / (dx*dz);
-            Txx[(250)*nxx + 250] += source[kk] / (dx*dz);                    
-        }        
-                                    
-        FDM8E2T_stressStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nxx,nzz,dt,dx,dz);
+        if(timePointer % 200 == 0) printf("Propagation time = %0.5f seconds\n", (timePointer+200)*dt);
+                  
+        FDM8E2T_stressStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);
+        // FDM8E2T_velocityStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);
 
-        if(kk % 200 == 0) printf("Propagation time = %0.5f seconds\n", kk*dt);
-
-        for(int index = 0; index < nxx; index++) 
-        {
-            seismogram[kk*nxx + index] = (Txx[200*nxx + index] + Tzz[200*nxx + index])/2.0f;
-            // seismogram[kk*nxx + index] = Vz[100*nxx + index];
-        }
+        getElasticIsotropicPressureSeismogram(seismogram,Txx,Tzz,nt,nx,nz,timePointer,zrec);
     }
+    #pragma acc exit data delete(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
+    #pragma acc exit data delete(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc])
+    #pragma acc exit data copyout(seismogram[0:nx*nt])
 
-    exportVector(seismogram,nxx*nt,"seismPressure_ricker.bin");
-    // exportVector(seismogram,nxx*nt,"seismPressure_intRicker.bin");
-    // exportVector(seismogram,nxx*nt,"seismPressure_hankelIntRicker.bin");
+    exportVector(seismogram,nx*nt,"results/seismograms/pressureElasticIsotropic2D.bin");
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);
