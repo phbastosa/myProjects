@@ -38,14 +38,14 @@ parFileName="parameters/modelingParameters.txt"
 echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nsrc\n$xsrc\n$zsrc\n$zrec" > $parFileName
 echo "Modeling parameters was built..."
 
-# pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicAcoustic2D.c -lm -o run.exe
-# ./run.exe $parFileName $simpGridRicker
+pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicAcoustic2D.c -lm -o run.exe
+./run.exe $parFileName $simpGridRicker
 
-# pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicAcousticVec2D.c -lm -o run.exe
-# ./run.exe $parFileName $stagGridRicker
+pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicAcousticVec2D.c -lm -o run.exe
+./run.exe $parFileName $stagGridRicker
 
-# pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicElasticIsotropic2D.c -lm -o run.exe
-# ./run.exe $parFileName $stagGridRicker
+pgcc -acc -fast -ta=tesla,cc60 basicModelingCodes/basicElasticIsotropic2D.c -lm -o run.exe
+./run.exe $parFileName $stagGridRicker
 
 timeCut=1200
 python3 comparingCode/compareSeismograms.py $nx $dx $nt $dt $timeCut $nsrc
