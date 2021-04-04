@@ -286,8 +286,8 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
             float Lx = 0.5f*(L[(jj+1) + ii*nxx] + L[jj + ii*nxx]);
             float Mx = 0.5f*(M[(jj+1) + ii*nxx] + M[jj + ii*nxx]);
 
-            Txx[index] += dt*((Lx + 2.0f*Mx)*dVx_dx + L_int*dVz_dz);   
-            Tzz[index] += dt*((Lx + 2.0f*Mx)*dVz_dz + L_int*dVx_dx);
+            Txx[index] += dt*((Lx + 2.0f*Mx)*dVx_dx + Lx*dVz_dz);   
+            Tzz[index] += dt*((Lx + 2.0f*Mx)*dVz_dz + Lx*dVx_dx);
         }
 
         if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
