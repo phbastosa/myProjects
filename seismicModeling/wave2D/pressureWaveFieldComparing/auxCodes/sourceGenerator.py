@@ -40,8 +40,8 @@ dt = float(sys.argv[1])
 nsrc = int(sys.argv[2])
 fcut = float(sys.argv[3])
 
-simpGridRicker = rickerGenerator(fcut,nsrc,dt)
-stagGridRicker = intRickerGenerator(halfDerivative(simpGridRicker,dt))
+simpGridRicker = halfDerivative(rickerGenerator(fcut,nsrc,dt),dt)
+stagGridRicker = intRickerGenerator(simpGridRicker)
 
 simpGridRicker.astype("float32",order="C").tofile(sys.argv[4])
 stagGridRicker.astype("float32",order="C").tofile(sys.argv[5])
