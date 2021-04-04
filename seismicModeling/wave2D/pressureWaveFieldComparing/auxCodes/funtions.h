@@ -62,13 +62,65 @@ void FDM8E2T_acoustic2D(int timePointer, float *vp, float *P_pre, float *P_pas, 
     }
 }
 
-void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
+void FDM8E2T_acousticVec2D(int timePointer, float *Vx, float *Vz, float *P, float *K, float *b, float *source,
+                           int nsrc, int xsrc, int zsrc, int nxx, int nzz, float dx, float dz, float dt)
 {
-    # pragma acc parallel loop present(pas[0:nPoints],pre[0:nPoints],fut[0:nPoints])
-    for(int index = 0; index < nPoints; ++index)
-    {
-        pas[index] = pre[index];         
-        pre[index] = fut[index];         
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],P[0:nxx*nzz],K[0:nxx*nzz],source[0:nsrc])
+    for(int index = 0; index < nxx*nzz; index++) 
+    {                  
+        int ii = (int) index / nxx;      // indicador de linhas  (direção z)
+        int jj = (int) index % nxx;      // indicador de colunas (direção x)
+
+        if((index == 0) && (timePointer < nsrc)) 
+        {
+            P[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);
+        }
+
+        if((ii >= 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) 
+        {
+            float dVx_dx = (75.0f*(Vx[(jj-3) + ii*nxx] - Vx[(jj+4) + ii*nxx]) + 
+                          1029.0f*(Vx[(jj+3) + ii*nxx] - Vx[(jj-2) + ii*nxx]) +
+                          8575.0f*(Vx[(jj-1) + ii*nxx] - Vx[(jj+2) + ii*nxx]) + 
+                        128625.0f*(Vx[(jj+1) + ii*nxx] - Vx[jj + ii*nxx]))/(dx*107520.0f);
+
+            float dVz_dz = (75.0f*(Vz[jj + (ii-3)*nxx] - Vz[jj + (ii+4)*nxx]) +   
+                          1029.0f*(Vz[jj + (ii+3)*nxx] - Vz[jj + (ii-2)*nxx]) +
+                          8575.0f*(Vz[jj + (ii-1)*nxx] - Vz[jj + (ii+2)*nxx]) +
+                        128625.0f*(Vz[jj + (ii+1)*nxx] - Vz[jj + ii*nxx]))/(dz*107520.0f);     
+
+            P[index] += -dt*K[index]*(dVx_dx + dVz_dz);
+        }
+    }
+
+    # pragma acc parallel loop present(Vx[0:nxx*nzz],Vz[0:nxx*nzz],P[0:nxx*nzz],b[0:nxx*nzz],source[0:nsrc])
+    for(int index = 0; index < nxx*nzz; index++) 
+    {                  
+        int ii = (int) index / nxx;      // indicador de linhas  (direção z)
+        int jj = (int) index % nxx;      // indicador de colunas (direção x)
+       
+        if((ii >= 0) && (ii < nzz) && (jj > 3) && (jj < nxx-3)) 
+        {
+            float dP_dx = (75.0f*(P[(jj-4) + ii*nxx] - P[(jj+3) + ii*nxx]) +
+                         1029.0f*(P[(jj+2) + ii*nxx] - P[(jj-3) + ii*nxx]) +
+                         8575.0f*(P[(jj-2) + ii*nxx] - P[(jj+1) + ii*nxx]) +
+                       128625.0f*(P[jj + ii*nxx]     - P[(jj-1) + ii*nxx]))/(dx*107520.0f);
+
+            float bx = 0.5f*(b[jj+1 + ii*nxx] + b[jj + ii*nxx]);
+
+            Vx[index] += -dt*bx*dP_dx;
+        }
+
+        if((ii > 3) && (ii < nzz-3) && (jj >= 0) && (jj < nxx)) 
+        {
+            float dP_dz = (75.0f*(P[jj + (ii-4)*nxx] - P[jj + (ii+3)*nxx]) + 
+                         1029.0f*(P[jj + (ii+2)*nxx] - P[jj + (ii-3)*nxx]) +
+                         8575.0f*(P[jj + (ii-2)*nxx] - P[jj + (ii+1)*nxx]) +
+                       128625.0f*(P[jj + ii*nxx]     - P[jj + (ii-1)*nxx]))/(dz*107520.0f);
+
+            float bz = 0.5f*(b[jj + (ii+1)*nxx] + b[jj + ii*nxx]);
+
+            Vz[index] += -dt*bz*dP_dz;
+        }
     }
 }
 
@@ -88,7 +140,7 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
             Tzz[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);   
         }
 
-        if((ii >= 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) 
+        if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
         {
             float dVx_dx = (75.0f*(Vx[(jj-3) + ii*nxx] - Vx[(jj+4) + ii*nxx]) + 
                           1029.0f*(Vx[(jj+3) + ii*nxx] - Vx[(jj-2) + ii*nxx]) +
@@ -116,9 +168,9 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
                           8575.0f*(Vx[jj + (ii-2)*nxx] - Vx[jj + (ii+1)*nxx]) +
                         128625.0f*(Vx[jj + ii*nxx]     - Vx[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float M_int = powf(0.25f*(1.0f/M[jj + (ii+1)*nxx] + 1.0f/M[(jj+1) + ii*nxx] + 1.0f/M[(jj+1) + (ii+1)*nxx] + 1.0f/M[jj + ii*nxx]),-1.0f); 
+            float Mxz = powf(0.25f*(1.0f/M[jj + (ii+1)*nxx] + 1.0f/M[(jj+1) + ii*nxx] + 1.0f/M[(jj+1) + (ii+1)*nxx] + 1.0f/M[jj + ii*nxx]),-1.0f); 
 
-            Txz[index] += dt*M_int*(dVx_dz + dVz_dx);            
+            Txz[index] += dt*Mxz*(dVx_dz + dVz_dx);            
         }          
     }
 
@@ -140,9 +192,9 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
                            8575.0f*(Txz[jj + (ii-1)*nxx] - Txz[jj + (ii+2)*nxx]) +
                          128625.0f*(Txz[jj + (ii+1)*nxx] - Txz[jj + ii*nxx]))/(dz*107520.0f);
 
-            float rho_int = 0.5f*(rho[(jj+1) + ii*nxx] + rho[jj + ii*nxx]);
+            float rhox = 0.5f*(rho[(jj+1) + ii*nxx] + rho[jj + ii*nxx]);
 
-            Vx[index] += dt/rho_int*(dTxx_dx + dTxz_dz);  
+            Vx[index] += dt/rhox*(dTxx_dx + dTxz_dz);  
         }
       
         if((ii > 3) && (ii < nzz-3) && (jj >= 3) && (jj < nxx-4)) 
@@ -157,9 +209,9 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
                            8575.0f*(Tzz[jj + (ii-2)*nxx] - Tzz[jj + (ii+1)*nxx]) +
                          128625.0f*(Tzz[jj + ii*nxx]     - Tzz[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float rho_int = 0.5f*(rho[jj + (ii+1)*nxx] + rho[jj + ii*nxx]);
+            float rhoz = 0.5f*(rho[jj + (ii+1)*nxx] + rho[jj + ii*nxx]);
 
-            Vz[index] += dt/rho_int*(dTxz_dx + dTzz_dz); 
+            Vz[index] += dt/rhoz*(dTxz_dx + dTzz_dz); 
         }
     }
 }
@@ -201,9 +253,9 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                            8575.0f*(Tzz[jj + (ii-2)*nxx] - Tzz[jj + (ii+1)*nxx]) +
                          128625.0f*(Tzz[jj + ii*nxx]     - Tzz[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float rho_int = powf(0.25f*(1.0f/rho[jj + ii*nxx] + 1.0f/rho[jj + (ii+1)*nxx] + 1.0f/rho[(jj+1) + (ii+1)*nxx] + 1.0f/rho[(jj+1) + ii*nxx]),-1.0f);
+            float rhoxz = powf(0.25f*(1.0f/rho[jj + ii*nxx] + 1.0f/rho[jj + (ii+1)*nxx] + 1.0f/rho[(jj+1) + (ii+1)*nxx] + 1.0f/rho[(jj+1) + ii*nxx]),-1.0f);
 
-            Vz[index] += dt/rho_int*(dTxz_dx + dTzz_dz); 
+            Vz[index] += dt/rhoxz*(dTxz_dx + dTzz_dz); 
         }
     }
 
@@ -231,11 +283,11 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                           8575.0f*(Vz[jj + (ii-1)*nxx] - Vz[jj + (ii+2)*nxx]) +
                         128625.0f*(Vz[jj + (ii+1)*nxx] - Vz[jj + ii*nxx]))/(dz*107520.0f);     
 
-            float L_int = 0.5f*(L[(jj+1) + ii*nxx] + L[jj + ii*nxx]);
-            float M_int = 0.5f*(M[(jj+1) + ii*nxx] + M[jj + ii*nxx]);
+            float Lx = 0.5f*(L[(jj+1) + ii*nxx] + L[jj + ii*nxx]);
+            float Mx = 0.5f*(M[(jj+1) + ii*nxx] + M[jj + ii*nxx]);
 
-            Txx[index] += dt*((L_int + 2.0f*M_int)*dVx_dx + L_int*dVz_dz);   
-            Tzz[index] += dt*((L_int + 2.0f*M_int)*dVz_dz + L_int*dVx_dx);
+            Txx[index] += dt*((Lx + 2.0f*Mx)*dVx_dx + L_int*dVz_dz);   
+            Tzz[index] += dt*((Lx + 2.0f*Mx)*dVz_dz + L_int*dVx_dx);
         }
 
         if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
@@ -250,9 +302,9 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
                           8575.0f*(Vx[jj + (ii-2)*nxx] - Vx[jj + (ii+1)*nxx]) +
                         128625.0f*(Vx[jj + ii*nxx]     - Vx[jj + (ii-1)*nxx]))/(dz*107520.0f);
 
-            float M_int = 0.5f*(M[jj + (ii+1)*nxx] + M[jj + ii*nxx]); 
+            float Mz = 0.5f*(M[jj + (ii+1)*nxx] + M[jj + ii*nxx]); 
 
-            Txz[index] += dt*M_int*(dVx_dz + dVz_dx);            
+            Txz[index] += dt*Mz*(dVx_dz + dVz_dx);            
         }      
     }
 }
@@ -285,11 +337,11 @@ void FDM8E2T_shearStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, f
                           8575.0f*(Vz[jj + (ii-2)*nxx] - Vz[jj + (ii+1)*nxx]) +
                         128625.0f*(Vz[jj + ii*nxx]     - Vz[jj + (ii-1)*nxx]))/(107520.0f*dz);     
 
-            float L_int = powf(0.25f*(1.0f/L[jj + (ii+1)*nxx] + 1.0f/L[jj + ii*nxx] + 1.0f/L[(jj+1) + ii*nxx] + 1.0f/L[(jj+1) + (ii+1)*nxx]),-1.0f);
-            float M_int = powf(0.25f*(1.0f/M[jj + (ii+1)*nxx] + 1.0f/M[jj + ii*nxx] + 1.0f/M[(jj+1) + ii*nxx] + 1.0f/M[(jj+1) + (ii+1)*nxx]),-1.0f);
+            float Lxz = powf(0.25f*(1.0f/L[jj + (ii+1)*nxx] + 1.0f/L[jj + ii*nxx] + 1.0f/L[(jj+1) + ii*nxx] + 1.0f/L[(jj+1) + (ii+1)*nxx]),-1.0f);
+            float Mxz = powf(0.25f*(1.0f/M[jj + (ii+1)*nxx] + 1.0f/M[jj + ii*nxx] + 1.0f/M[(jj+1) + ii*nxx] + 1.0f/M[(jj+1) + (ii+1)*nxx]),-1.0f);
 
-            Txx[index] += dt*((L_int + 2.0f*M_int)*dVx_dx + L_int*dVz_dz);   
-            Tzz[index] += dt*((L_int + 2.0f*M_int)*dVz_dz + L_int*dVx_dx);
+            Txx[index] += dt*((Lxz + 2.0f*Mxz)*dVx_dx + Lxz*dVz_dz);   
+            Tzz[index] += dt*((Lxz + 2.0f*Mxz)*dVz_dz + Lxz*dVx_dx);
         }
 
         if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
@@ -326,9 +378,9 @@ void FDM8E2T_shearStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, f
                            8575.0f*(Txz[jj + (ii-2)*nxx] - Txz[jj + (ii+1)*nxx]) +
                          128625.0f*(Txz[jj + ii*nxx]     - Txz[jj + (ii-1)*nxx]))/(107520.0f*dz);
 
-            float rho_int = 0.5f*(rho[jj + ii*nxx] + rho[(jj+1) + ii*nxx]);
+            float rhox = 0.5f*(rho[jj + ii*nxx] + rho[(jj+1) + ii*nxx]);
 
-            Vx[index] += dt/rho_int*(dTxx_dx + dTxz_dz);  
+            Vx[index] += dt/rhox*(dTxx_dx + dTxz_dz);  
         }
 
         if((ii >= 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-3)) 
@@ -343,10 +395,20 @@ void FDM8E2T_shearStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, f
                            8575.0f*(Tzz[jj + (ii-1)*nxx] - Tzz[jj + (ii+2)*nxx]) +
                          128625.0f*(Tzz[jj + (ii+1)*nxx] - Tzz[jj + ii*nxx]))/(107520.0f*dz);
 
-            float rho_int = 0.5f*(rho[jj + ii*nxx] + rho[jj + (ii+1)*nxx]);
+            float rhoz = 0.5f*(rho[jj + ii*nxx] + rho[jj + (ii+1)*nxx]);
 
-            Vz[index] += dt/rho_int*(dTxz_dx + dTzz_dz); 
+            Vz[index] += dt/rhoz*(dTxz_dx + dTzz_dz); 
         }
+    }
+}
+
+void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
+{
+    # pragma acc parallel loop present(pas[0:nPoints],pre[0:nPoints],fut[0:nPoints])
+    for(int index = 0; index < nPoints; ++index)
+    {
+        pas[index] = pre[index];         
+        pre[index] = fut[index];         
     }
 }
 
