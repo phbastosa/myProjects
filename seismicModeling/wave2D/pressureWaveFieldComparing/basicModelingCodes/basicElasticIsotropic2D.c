@@ -2,16 +2,15 @@
 # include <stdlib.h>
 # include <math.h>
 # include <time.h>
-# include <string.h>
 # include "../auxCodes/funtions.h"
 
 int main(int argc, char **argv) 
 {
     printf("\n\nBasic elastic isotropic modeling\n");
 
-    float total_time;
-    time_t t_0, t_f;
-    t_0 = time(NULL);
+    float totalTime;
+    time_t t0, tf;
+    t0 = time(NULL);
 
     int nx, nz, nt, nsrc;
     int xsrc, zsrc, zrec;
@@ -36,11 +35,11 @@ int main(int argc, char **argv)
     
     for(int index = 0; index < nx*nz; index++) 
     {
-        vp[index] = 2000.0f;
-        vs[index] = vp[index]/1.7f;
-        rho[index] = 310.0f*powf(vp[index],0.25f);
-        M[index] = rho[index]*powf(vs[index],2.0f);
-        L[index] = rho[index]*powf(vp[index],2.0f) - 2.0f*M[index];
+        vp[index]  = 1500.0f;
+        vs[index]  = 0.0f;
+        rho[index] = 1000.0f;
+        M[index]   = rho[index]*powf(vs[index],2.0f);
+        L[index]   = rho[index]*powf(vp[index],2.0f) - 2.0f*M[index];
     }
 
     importFloatVector(source,nsrc,argv[2]);
@@ -62,9 +61,9 @@ int main(int argc, char **argv)
 
     exportVector(seismogram,nx*nt,"results/seismograms/pressureElasticIsotropic2D.bin");
 
-    t_f = time(NULL);
-    total_time = difftime(t_f, t_0);
-    printf("\nExecution time: \033[31m%.0fs\n\033[m", total_time);
+    tf = time(NULL);
+    totalTime = difftime(tf, t0);
+    printf("\nExecution time: \033[31m%.0fs\n\033[m", totalTime);
 
     return 0;
 } 

@@ -28,6 +28,49 @@ void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, 
     fclose(arq);
 }
 
+void FDM8E2T_acoustic2D(int timePointer, float *vp, float *P_pre, float *P_pas, float *P_fut, float *source, 
+                        int nsrc, int xsrc, int zsrc, int nxx, int nzz, float dx, float dz, float dt)
+{
+
+    for(int index = 0; index < nxx*nzz; ++index) 
+    {
+        int ii = floor(index / nxx);  /* Line indicator */
+        int jj = index % nxx;         /* Column indicator */  
+        
+        if((timePointer < nsrc) && (index == 0))
+        { 
+            P_pre[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz); 
+        }
+
+        if((ii > 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
+        {
+            float d2_Px2 = (- 9.0f*(P_pre[ii*nxx + (jj-4)] + P_pre[ii*nxx + (jj+4)])
+                        +   128.0f*(P_pre[ii*nxx + (jj-3)] + P_pre[ii*nxx + (jj+3)])
+                        -  1008.0f*(P_pre[ii*nxx + (jj-2)] + P_pre[ii*nxx + (jj+2)])
+                        +  8064.0f*(P_pre[ii*nxx + (jj+1)] + P_pre[ii*nxx + (jj-1)])
+                        - 14350.0f*(P_pre[ii*nxx + jj]))/(5040.0f*powf(dx,2));
+
+            float d2_Pz2 = (- 9.0f*(P_pre[(ii-4)*nxx + jj] + P_pre[(ii+4)*nxx + jj])
+                        +   128.0f*(P_pre[(ii-3)*nxx + jj] + P_pre[(ii+3)*nxx + jj])
+                        -  1008.0f*(P_pre[(ii-2)*nxx + jj] + P_pre[(ii+2)*nxx + jj])
+                        +  8064.0f*(P_pre[(ii-1)*nxx + jj] + P_pre[(ii+1)*nxx + jj])
+                        - 14350.0f*(P_pre[ii*nxx + jj]))/(5040.0f*powf(dz,2));
+
+            P_fut[ii*nxx + jj] = powf(dt,2.0f)*powf(vp[ii*nxx + jj],2.0f) * (d2_Px2 + d2_Pz2) 
+                               + 2.0f*P_pre[ii*nxx + jj] - P_pas[ii*nxx + jj];
+        }
+    }
+}
+
+void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
+{
+    for(int index = 0; index < nPoints; ++index)
+    {
+        pas[index] = pre[index];         
+        pre[index] = fut[index];         
+    }
+}
+
 void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, float *Tzz, float *Txz, float *rho, 
                                               float *M, float *L, int nxx, int nzz, float dt, float dx, float dz, 
                                               int timePointer, float *source, int nsrc, int zsrc, int xsrc) 
@@ -213,7 +256,17 @@ void FDM8E2T_velocityStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx
     }
 }
 
-void getElasticIsotropicPressureSeismogram(float * seism, float * Txx, float * Tzz, int nt, int nxx, int nzz, int timePointer, int zrec)
+
+void getAcousticPressureSeismogram(float *seism, float *P, int nt, int nxx, int nzz, int timePointer, int zrec)
+{
+    // #pragma acc parallel loop present(seism[0:nxx*nt],P[0:nxx*nzz])
+    for(int index = 0; index < nxx; index++) 
+    {
+        seism[timePointer*nxx + index] = P[zrec*nxx + index];
+    }
+}
+
+void getElasticIsotropicPressureSeismogram(float *seism, float *Txx, float *Tzz, int nt, int nxx, int nzz, int timePointer, int zrec)
 {
     #pragma acc parallel loop present(seism[0:nxx*nt],Txx[0:nxx*nzz],Tzz[0:nxx*nzz])
     for(int index = 0; index < nxx; index++) 
