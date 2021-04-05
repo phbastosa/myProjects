@@ -2,7 +2,7 @@
 # include <math.h>
 # include <stdio.h>
 # include <stdlib.h>
-# include "auxiliaries/functions.h"
+# include "auxCodes/functions.h"
 
 int main(int argc, char **argv) 
 {
@@ -12,7 +12,7 @@ int main(int argc, char **argv)
 
     int nx,nz,nt,nsrc,spread;
     int absLayer,nrecs,nshot; 
-    float parB,dx,dz,dt; 
+    float dx,dz,dt; 
 
     readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&absLayer,&nrecs,&nshot,&nsrc,&spread,argv[1]);
 
@@ -27,9 +27,8 @@ int main(int argc, char **argv)
     float * P_fut  = (float *) malloc(nxx*nzz*sizeof(float));  
     float * source = (float *) malloc(nsrc*sizeof(float));    
 
-    char seismFile[100], snapsFile[100];
     float * seismogram = (float *) malloc(nt*spread*sizeof(float));
-    float * snapshots  = (float *) malloc(nx*nz*sizeof(float));
+    float * data = (float *) malloc(nshot*nt*spread*sizeof(float));
 
     int *xsrc = (int *) malloc(nshot*sizeof(int));         
     int *xrec = (int *) malloc(nrecs*sizeof(int));      
@@ -46,28 +45,33 @@ int main(int argc, char **argv)
 
     ajustCoordinates(xrec,xsrc,topo,absLayer,nxx,nrecs,nshot);
 
-    for (int i = 0; i < spread; i++) printf("%i\n",xrec[i]);
-
-    for(int shot = 0; shot < 1; ++shot) 
+    for(int shotPointer = 0; shotPointer < 1; ++shotPointer) 
     {        
         setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
-
-        sprintf(snapsFile,"results/snapshots/snaps_shot_%i.bin",shot+1);
-        sprintf(seismFile,"results/seismograms/seism_shot_%i.bin",shot+1);   
                 
-        FILE * snap = fopen(snapsFile,"ab");
+        #pragma acc enter data copyin(vp[0:nxx*nzz],P_pre[0:nxx*nzz],P_pas[0:nxx*nzz],P_fut[0:nxx*nzz],damp[0:nxx*nzz])
+        #pragma acc enter data copyin(seismogram[0:spread*nt],xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc])
+
         for(int timePointer = 0; timePointer < nt; ++timePointer) 
         {
-            modelingStatus(shot,timePointer,xsrc,nshot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
-            FDM_8E2T_acoustic2D(shot,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,topo,xsrc,nxx,nzz,dx,dz,dt);
-            cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx,nzz);
-            getSeismograms(seismogram,P_pre,xrec,topo,spread,nxx,shot,timePointer);            
-            getSnapshots(snap,snapshots,P_pre,vp,nxx,nzz,absLayer,timePointer,nt,100,5e-8);
+            modelingStatus(shotPointer,timePointer,xsrc,nshot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
+
+            FDM_8E2T_acoustic2D(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,topo,xsrc,nxx,nzz,dx,dz,dt,nshot);
+
+            cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx*nzz);
+
+            getSeismograms(seismogram,P_fut,xrec,topo,spread,nxx,nzz,nt,nrecs,shotPointer,timePointer);            
+
             waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
         }
-        exportVector(seismogram,nt*spread,seismFile);
-        fclose(snap);
+        
+        #pragma acc exit data delete(vp[0:nxx*nzz],P_pre[0:nxx*nzz],P_pas[0:nxx*nzz],P_fut[0:nxx*nzz])
+        #pragma acc exit data delete(xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc],damp[0:nxx*nzz])
+        #pragma acc exit data copyout(seismogram[0:spread*nt])        
+
+        joiningSeismograms(seismogram,data,spread,nt,shotPointer);
     }
+    exportVector(data,1*nt*spread,"data/acoustic_marmousi2_dh5_dataset.bin");
 
     t_f = time(NULL);                
     total_time = difftime(t_f, t_0); 
