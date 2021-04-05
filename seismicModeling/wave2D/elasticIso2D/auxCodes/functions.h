@@ -1,7 +1,7 @@
 # ifndef FUNCTIONS_H_DEFINED
 # define FUNCTIONS_H_DEFINED
 
-/* Function that make the memmory block to zero */
+/* */
 void mem_set(float *v, int nPoints) 
 {
     for(int index = 0; index < nPoints; ++index) v[index] = 0.0f;
