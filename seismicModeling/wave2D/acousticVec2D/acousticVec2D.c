@@ -21,8 +21,8 @@ int main(int argc, char **argv)
  
     float *vp   = (float *) malloc(nxx*nzz*sizeof(float));  
     float *rho  = (float *) malloc(nxx*nzz*sizeof(float));
-    float *bulk = (float *) malloc(nxx*nzz*sizeof(float));
-    float *buoy = (float *) malloc(nxx*nzz*sizeof(float));
+    float *K    = (float *) malloc(nxx*nzz*sizeof(float));
+    float *b    = (float *) malloc(nxx*nzz*sizeof(float));
     float *Vx   = (float *) malloc(nxx*nzz*sizeof(float));
     float *Vz   = (float *) malloc(nxx*nzz*sizeof(float));
     float *P    = (float *) malloc(nxx*nzz*sizeof(float));
