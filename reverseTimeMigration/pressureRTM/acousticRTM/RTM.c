@@ -75,6 +75,7 @@ int main(int argc,char **argv)
         #pragma acc enter data copyin(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz],seism[0:nt*spread],damp[0:nxx*nzz])
         #pragma acc enter data copyin(xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc],direct_field[0:nx*nz*(nt/sampleInterval)])
         #pragma acc enter data copyin(direct_field_sum[0:nx*nz],reverse_field_sum[0:nx*nz],image[0:nx*nz])
+        
         for(int timePointer = 0; timePointer < nt; ++timePointer) /* Time loop */
         {
             propagationProgress(timePointer,shotPointer,xsrc,nshot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,nabc);
@@ -104,6 +105,7 @@ int main(int argc,char **argv)
 
             waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
         }
+        
         #pragma acc exit data delete(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz],seism[0:nt*spread],damp[0:nxx*nzz])
         #pragma acc exit data delete(xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc],direct_field[0:nx*nz*(nt/sampleInterval)])
         #pragma acc exit data copyout(direct_field_sum[0:nx*nz],reverse_field_sum[0:nx*nz],image[0:nx*nz])
