@@ -21,7 +21,7 @@ par=0.0045     # parameter to use in exponential function of damp
 # Acquisition Geometry parameters
 ns=357         # number of shots in modeling 
 ds=25          # sources spacing
-nr=320         # number of receivers in modeling
+nr=677         # number of receivers in modeling
 dr=25          # receivers spacing
 spread=320     # active receivers per shot
 offsetMin=100  # minimum offset in acquisition geometry

@@ -45,7 +45,7 @@ int main(int argc, char **argv)
 
     ajustCoordinates(xrec,xsrc,topo,absLayer,nxx,nrecs,nshot);
 
-    for(int shotPointer = 0; shotPointer < 1; ++shotPointer) 
+    for(int shotPointer = 0; shotPointer < nshot; ++shotPointer) 
     {        
         setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
                 
@@ -71,7 +71,7 @@ int main(int argc, char **argv)
 
         joiningSeismograms(seismogram,data,spread,nt,shotPointer);
     }
-    exportVector(data,1*nt*spread,"data/acoustic_marmousi2_dh5_dataset.bin");
+    exportVector(data,nshot*nt*spread,"data/acoustic_marmousi2_dh5_dataset.bin");
 
     t_f = time(NULL);                
     total_time = difftime(t_f, t_0); 

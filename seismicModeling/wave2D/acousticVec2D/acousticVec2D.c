@@ -56,7 +56,7 @@ int main(int argc, char **argv)
 
     float * vels = getVelocities(nxx,nzz,vp,topo);
 
-    for(int shotPointer = 0; shotPointer < 1; shotPointer++)
+    for(int shotPointer = 0; shotPointer < nshot; shotPointer++)
     {
         wavefield_set(Vx,Vz,P,nxx,nzz); 
 
@@ -81,7 +81,7 @@ int main(int argc, char **argv)
         joiningSeismograms(seismogram,data,spread,nt,shotPointer);
     }
 
-    exportVector(data,1*spread*nt,"data/acousticVec_marmousi2_dh5_dataset.bin");
+    exportVector(data,nshot*spread*nt,"data/acousticVec_marmousi2_dh5_dataset.bin");
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);
