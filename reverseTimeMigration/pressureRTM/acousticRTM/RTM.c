@@ -20,7 +20,7 @@ int main(int argc,char **argv)
     int nxx = nx + 2*nabc;
     int nzz = nz + 2*nabc;
 
-    int sampleInterval = 20;   /* Used to slice wave field */
+    int sampleInterval = 50;   /* Used to slice wave field */
     
     float *vels  = (float *) malloc(2*sizeof(float));
     float *vp    = (float *) malloc(nxx*nzz*sizeof(float));   /* Matrix of p wave velocities */
@@ -60,13 +60,10 @@ int main(int argc,char **argv)
     memSet(direct_field_sum,nx*nz);     /* Zeroing summating direct field matrix */
     memSet(reverse_field_sum,nx*nz);    /* Zeroing summating reverse field matrix */
 
-    char seismicFileName[100];   
+    FILE *read = fopen(argv[7],"rb");   /* Opening seismic data file */
 
-    for(int shotPointer = 0; shotPointer < 1; ++shotPointer) /* Shots loop */ 
+    for(int shotPointer = 0; shotPointer < nshot; ++shotPointer) /* Shots loop */ 
     {
-        sprintf(seismicFileName,"data/inputShot%i_nt4000.bin",shotPointer+1001);  /* */
-        FILE *read = fopen(seismicFileName,"rb");                                    /* Opening seismic data file */
-
         memSet(P_pas,nxx*nzz);                          /* Zeroing past wave field */  
         memSet(P_pre,nxx*nzz);                          /* Zeroing present wave field */
         memSet(P_fut,nxx*nzz);                          /* Zeroing future wave field */

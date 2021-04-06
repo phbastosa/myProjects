@@ -64,7 +64,7 @@ void ajustCoordinates(int *xrec, int *xsrc, int *topo, int nabc, int nxx, int nr
     for (int ii = 0; ii < nrec; ii++) xrec[ii] += nabc;
     for (int ii = 0; ii < nsrc; ii++) xsrc[ii] += nabc;    
 
-    for (int ii = 0; ii < nxx; ii++) topo[ii] = 2 + nabc;    
+    for (int ii = 0; ii < nxx; ii++) topo[ii] = 4 + nabc;    
 }
 
 void printStatus(float * vels, float dx, float dz, float dt, int nxx, int nzz, int abc, int nt)
