@@ -9,7 +9,7 @@ ds = int(sys.argv[4])      # Espaçamento entre disparos
 
 dh = float(sys.argv[5])    # Parâmetro de discretização espacial da malha
 
-sx = np.arange(ds,ns*ds,ds)
+sx = np.arange(0,ns*ds,ds)
 gx = np.arange(0,ng*dg,dg) 
 
 xsrc = sx / dh

@@ -27,7 +27,7 @@ parb=0.0045     # parameter to use in exponential function of damp
 # mOffset=100     # minimum offset in acquisition geometry
 
 # OBN Acquisition Geometry parameters
-ns=200          # number of shots in modeling 
+ns=201          # number of shots in modeling 
 ds=85           # sources spacing
 nr=101          # number of receivers in modeling
 dr=170          # receivers spacing
