@@ -18,13 +18,20 @@ dt=0.0005       # temporal discretization parameter
 nabc=50         # samples in Cerjan absorbing boundary condition 
 parb=0.0045     # parameter to use in exponential function of damp
 
-# Acquisition Geometry parameters
-ns=357          # number of shots in modeling 
-ds=25           # sources spacing
-nr=677          # number of receivers in modeling
-dr=25           # receivers spacing
-spread=320      # active receivers per shot
-mOffset=100     # minimum offset in acquisition geometry
+# End-On Acquisition Geometry parameters
+# ns=357          # number of shots in modeling 
+# ds=25           # sources spacing
+# nr=677          # number of receivers in modeling
+# dr=25           # receivers spacing
+# spread=320      # active receivers per shot
+# mOffset=100     # minimum offset in acquisition geometry
+
+# OBN Acquisition Geometry parameters
+ns=200          # number of shots in modeling 
+ds=85           # sources spacing
+nr=101          # number of receivers in modeling
+dr=170          # receivers spacing
+wb=100          # water bottim depth
 
 # Source parameters
 fcut=50         # maximum frequency of Ricker source in Hz
@@ -43,7 +50,7 @@ xsrcPath="parameters/xsrc.bin"
 echo "Pre-contitioning parameters:"
 
 xrecPath="parameters/xrec.bin"; xsrcPath="parameters/xsrc.bin" 
-python3 auxCodes/buildEndOnGeometry.py $spread $dr $ns $mOffset $ds $dx $xsrcPath $xrecPath  
+python3 auxCodes/buildOBNGeometry.py $nr $dr $ns $ds $dx $xsrcPath $xrecPath  
 echo -e "\nAcquisition was built..."
 
 inputModel="model/vpInput.bin"
@@ -59,7 +66,7 @@ python3 auxCodes/buildSource.py $dt $nsrc $fcut $sourceFile
 echo "Wavelet was built..."
 
 parFileName="parameters/modelingParameters.txt"
-echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nabc\n$nr\n$ns\n$nsrc\n$spread" > $parFileName
+echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nabc\n$nr\n$ns\n$nsrc\n$wb" > $parFileName
 echo "Modeling parameters was built..."
 
 pgcc -fast -ta=tesla,cc60 acoustic2D.c -lm -o run.exe
