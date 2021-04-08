@@ -106,7 +106,7 @@ void modelingStatus(int shot, int time, int *xsrc, int n_shot, int *xrec, int sp
 
         printf("Modeling status:\n");
         printf("   Shot position: %.1f meters\n",(xsrc[shot]-abc)*dx);
-        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[shot]-abc)*dx,(xrec[shot + spread-1]-abc)*dx);
+        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[0]-abc)*dx,(xrec[spread-1]-abc)*dx);
         printf("   Total progress: %.2f %%\n",(float) shot/n_shot * 100.0f);
         printf("\nExported seismograms: %i of %i\n",shot,n_shot);
     }
