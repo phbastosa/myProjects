@@ -11,13 +11,13 @@ int main(int argc, char **argv)
     t_0 = time(NULL);
 
     int nx,nz,nt,nsrc,wbh;
-    int absLayer,nrecs,nshot; 
+    int nabc,nrecs,nshot; 
     float dx,dz,dt; 
 
-    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&absLayer,&nrecs,&nshot,&nsrc,&wbh,argv[1]);
+    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nabc,&nrecs,&nshot,&nsrc,&wbh,argv[1]);
 
-    int nxx = nx + 2*absLayer;
-    int nzz = nz + 2*absLayer;
+    int nxx = nx + 2*nabc;
+    int nzz = nz + 2*nabc;
 
     float * vels   = (float *) malloc(2*sizeof(float));
     float * damp   = (float *) malloc(nxx*nzz*sizeof(float));     
@@ -32,7 +32,9 @@ int main(int argc, char **argv)
 
     int *xsrc = (int *) malloc(nshot*sizeof(int));         
     int *xrec = (int *) malloc(nrecs*sizeof(int));      
-    int *topo = (int *) malloc(nxx*sizeof(int));   
+
+    int *seaTop = (int *) malloc(nxx*sizeof(int));   
+    int *seaBot = (int *) malloc(nxx*sizeof(int));
 
     importFloatVector(vp,nxx*nzz,argv[2]);
     importFloatVector(damp,nxx*nzz,argv[3]);
@@ -43,30 +45,30 @@ int main(int argc, char **argv)
 
     vels = getVelocities(nxx,nzz,vp);
 
-    ajustCoordinates(xrec,xsrc,topo,absLayer,nxx,nrecs,nshot);
+    ajustCoordinates(xrec,xsrc,seaTop,seaBot,wbh,nabc,nxx,nrecs,nshot);
 
     for(int shotPointer = 0; shotPointer < nshot; ++shotPointer) 
     {        
         setWaveField(P_pas,P_pre,P_fut,nxx*nzz);
                 
         #pragma acc enter data copyin(vp[0:nxx*nzz],P_pre[0:nxx*nzz],P_pas[0:nxx*nzz],P_fut[0:nxx*nzz],damp[0:nxx*nzz])
-        #pragma acc enter data copyin(seismogram[0:nrecs*nt],xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc])
+        #pragma acc enter data copyin(seismogram[0:nrecs*nt],xsrc[0:nshot],xrec[0:nrecs],seaTop[0:nxx],seaBot[0:nxx],source[0:nsrc])
 
         for(int timePointer = 0; timePointer < nt; ++timePointer) 
         {
-            modelingStatus(shotPointer,timePointer,xsrc,nshot,xrec,nrecs,dx,dz,nt,vels,dt,nxx,nzz,absLayer);
+            modelingStatus(shotPointer,timePointer,xsrc,nshot,xrec,nrecs,dx,dz,nt,vels,dt,nxx,nzz,nabc);
 
-            FDM_8E2T_acoustic2D(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,topo,xsrc,nxx,nzz,dx,dz,dt,nshot);
+            FDM_8E2T_acoustic2D(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,seaTop,xsrc,nxx,nzz,dx,dz,dt,nshot);
 
             cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx*nzz);
 
-            getSeismograms(seismogram,P_fut,xrec,wbh,nrecs,nxx,nzz,nt,nrecs,shotPointer,timePointer);            
+            getSeismograms(seismogram,P_fut,xrec,seaBot,nrecs,nxx,nzz,nt,shotPointer,timePointer);            
 
             waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
         }
         
-        #pragma acc exit data delete(vp[0:nxx*nzz],P_pre[0:nxx*nzz],P_pas[0:nxx*nzz],P_fut[0:nxx*nzz])
-        #pragma acc exit data delete(xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc],damp[0:nxx*nzz])
+        #pragma acc exit data delete(vp[0:nxx*nzz],P_pre[0:nxx*nzz],P_pas[0:nxx*nzz],P_fut[0:nxx*nzz],damp[0:nxx*nzz])
+        #pragma acc exit data delete(xsrc[0:nshot],xrec[0:nrecs],seaTop[0:nxx],seaBot[0:nxx],source[0:nsrc])
         #pragma acc exit data copyout(seismogram[0:nrecs*nt])        
 
         joiningSeismograms(seismogram,data,nrecs,nt,shotPointer);

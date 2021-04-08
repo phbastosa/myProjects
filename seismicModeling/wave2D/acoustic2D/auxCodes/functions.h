@@ -97,18 +97,19 @@ void modelingStatus(int shot, int time, int * xsrc, int n_shot, int * xrec, int 
     }
 }   
 
-void ajustCoordinates(int *xrec, int *xsrc, int *topo, int nabc, int nxx, int nrec, int nsrc)
+void ajustCoordinates(int *xrec, int *xsrc, int *seaTop, int *seaBot, int wbh, int nabc, int nxx, int nrec, int nsrc)
 {
     for (int ii = 0; ii < nrec; ii++) xrec[ii] += nabc;
     for (int ii = 0; ii < nsrc; ii++) xsrc[ii] += nabc;    
 
-    for (int ii = 0; ii < nxx; ii++) topo[ii] = nabc + 4;    
+    for (int ii = 0; ii < nxx; ii++) seaTop[ii] = nabc + 4;    
+    for (int ii = 0; ii < nxx; ii++) seaBot[ii] = nabc + wbh;    
 }
 
 void FDM_8E2T_acoustic2D(int shot, int time, float * vp, float * P_pre, float * P_pas, float * P_fut, float * source,  
-                         int nsrc, int * topo, int * x_src, int nxx, int nzz, float dx, float dz, float dt, int nshot)
+                         int nsrc, int * seaTop, int * x_src, int nxx, int nzz, float dx, float dz, float dt, int nshot)
 {
-    # pragma acc parallel loop present(vp[0:nxx*nzz],P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],source[0:nsrc],x_src[0:nshot],topo[0:nxx]) 
+    # pragma acc parallel loop present(vp[0:nxx*nzz],P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],source[0:nsrc],x_src[0:nshot],seaTop[0:nxx]) 
     for(int index = 0; index < nxx*nzz; ++index) 
     {
         int ii = floor(index / nxx);  /* Line indicator */
@@ -116,7 +117,7 @@ void FDM_8E2T_acoustic2D(int shot, int time, float * vp, float * P_pre, float * 
         
         if((time < nsrc) && (index == 0))
         { 
-            P_pre[topo[x_src[shot]]*nxx + x_src[shot]] += source[time] / (dx*dz); 
+            P_pre[seaTop[x_src[shot]]*nxx + x_src[shot]] += source[time] / (dx*dz); 
         }
 
         if((ii > 3) && (ii < nzz-4) && (jj > 3) && (jj < nxx-4)) 
@@ -159,12 +160,12 @@ void waveFieldUpdate(float * pas, float * pre, float * fut, int nPoints)
     }
 }
 
-void getSeismograms(float * seism, float * P_pre, int * xrec, int wbh, int spread, int nxx, int nzz, int nt, int nrec, int shot, int time)
+void getSeismograms(float * seism, float * P_pre, int * xrec, int *seaBot, int nrecs, int nxx, int nzz, int nt, int shot, int time)
 {
-    # pragma acc parallel loop present(seism[0:spread*nt],P_pre[0:nxx*nzz],xrec[0:nrec])
-    for (int ii = 0; ii < spread; ii++)
+    # pragma acc parallel loop present(seism[0:nrecs*nt],P_pre[0:nxx*nzz],xrec[0:nrecs],seaBot[0:nxx])
+    for (int ii = 0; ii < nrecs; ii++)
     {
-        seism[time*spread + ii] = P_pre[wbh*nxx + xrec[ii]];
+        seism[time*nrecs + ii] = P_pre[seaBot[xrec[ii]]*nxx + xrec[ii]];
     }
 }
 
