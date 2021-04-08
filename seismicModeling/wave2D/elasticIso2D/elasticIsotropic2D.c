@@ -10,12 +10,12 @@ int main(int argc, char **argv)
     time_t t_0, t_f;
     t_0 = time(NULL);
 
-    int nx, nz, nt, nsrc;
-    int nabc, spread, nshot, nrec; 
-    float dx, dz, dt; 
+    int nx,nz,nt,nsrc,wbh;
+    int nabc,nshot,nrecs; 
+    float dx,dz,dt; 
 
-    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nabc,&nrec,&nshot,&spread,&nsrc,argv[1]);
-
+    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nabc,&nrecs,&nshot,&nsrc,&wbh,argv[1]);
+    
     int nxx = nx + 2*nabc;
     int nzz = nz + 2*nabc;
  
@@ -33,17 +33,19 @@ int main(int argc, char **argv)
     
     float *source = (float *) malloc(nsrc*sizeof(float));
     
-    int *topo = (int *) malloc(nxx*sizeof(int));
-    int *xrec = (int *) malloc(nrec*sizeof(int));
+    int *seaTop = (int *) malloc(nxx*sizeof(int));
+    int *seaBot = (int *) malloc(nxx*sizeof(int));
+    
+    int *xrec = (int *) malloc(nrecs*sizeof(int));
     int *xsrc = (int *) malloc(nshot*sizeof(int));
     
-    float *seismogram = (float *) malloc(spread*nt*sizeof(float));
-    float *data = (float *) malloc(nshot*spread*nt*sizeof(float));
+    float *seismogram = (float *) malloc(nrecs*nt*sizeof(float));
+    float *data = (float *) malloc(nshot*nrecs*nt*sizeof(float));
 
-    importIntegerVector(xrec,nrec,argv[2]);
+    importIntegerVector(xrec,nrecs,argv[2]);
     importIntegerVector(xsrc,nshot,argv[3]);
     
-    ajustCoordinates(xrec,xsrc,topo,nabc,nx,nrec,nshot);
+    ajustCoordinates(xrec,xsrc,seaTop,seaBot,wbh,nabc,nx,nrecs,nshot);
 
     importFloatVector(source,nsrc,argv[4]);
 
@@ -58,34 +60,34 @@ int main(int argc, char **argv)
         L[index] = rho[index]*pow(vp[index],2.0f) - 2.0f*M[index];
     }
 
-    float * vels = getVelocities(nxx,nzz,vp,vs,topo);
+    float * vels = getVelocities(nxx,nzz,vp);
 
-    for(int shotPointer = 0; shotPointer < 1; shotPointer++)
+    for(int shotPointer = 0; shotPointer < nshot; shotPointer++)
     {
         wavefield_set(Vx,Vz,Txx,Tzz,Txz,nxx,nzz);
 
         #pragma acc enter data copyin(rho[0:nxx*nzz],M[0:nxx*nzz],L[0:nxx*nzz],Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz])
-        #pragma acc enter data copyin(damp[0:nxx*nzz],seismogram[0:nt*spread],topo[0:nxx],xrec[0:nrec],xsrc[0:nshot],source[0:nsrc])
+        #pragma acc enter data copyin(damp[0:nxx*nzz],seismogram[0:nt*nrecs],seaTop[0:nxx],seaBot[0:nxx],xrec[0:nrecs],xsrc[0:nshot],source[0:nsrc])
         
         for(int timePointer = 0; timePointer < nt; timePointer++) 
         {    
-            modelingStatus(shotPointer,timePointer,xsrc,nshot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,nabc);
+            modelingStatus(shotPointer,timePointer,xsrc,nshot,xrec,nrecs,dx,dz,nt,vels,dt,nxx,nzz,nabc);
             
-            FDM8E2T_stressStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nxx,nzz,dt,dx,dz,topo,xsrc,source,nsrc,nshot,timePointer,shotPointer);
+            FDM8E2T_stressStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nxx,nzz,dt,dx,dz,seaTop,xsrc,source,nsrc,nshot,timePointer,shotPointer);
 
             cerjanAbsorbingBoundaryCondition(Vx,Vz,Txx,Tzz,Txz,damp,nxx,nzz);          
 
-            getSeismogram(seismogram,Txx,Tzz,xrec,topo,spread,nrec,nxx,nzz,nt,shotPointer,timePointer);
+            getSeismogram(seismogram,Txx,Tzz,xrec,seaBot,nrecs,nxx,nzz,nt,shotPointer,timePointer);
         }
         
         #pragma acc exit data delete(rho[0:nxx*nzz],M[0:nxx*nzz],L[0:nxx*nzz],Vx[0:nxx*nzz],Vz[0:nxx*nzz],Txx[0:nxx*nzz],Tzz[0:nxx*nzz],Txz[0:nxx*nzz])
-        #pragma acc exit data delete(damp[0:nxx*nzz],topo[0:nxx],xrec[0:nrec],xsrc[0:nshot],source[0:nsrc])
-        #pragma acc exit data copyout(seismogram[0:nt*spread])
+        #pragma acc exit data delete(damp[0:nxx*nzz],seaTop[0:nxx],seaBot[0:nxx],xrec[0:nrecs],xsrc[0:nshot],source[0:nsrc])
+        #pragma acc exit data copyout(seismogram[0:nt*nrecs])
 
-        joiningSeismograms(seismogram,data,spread,nt,shotPointer);
+        joiningSeismograms(seismogram,data,nrecs,nt,shotPointer);
     }
 
-    exportVector(data,1*spread*nt,"data/elasticIsotropic_marmousi2_dh5_dataset.bin");
+    exportVector(data,nshot*nrecs*nt,"data/elasticIsotropic_marmousi2_dh5_dataset.bin");
 
     t_f = time(NULL);
     total_time = difftime(t_f, t_0);
