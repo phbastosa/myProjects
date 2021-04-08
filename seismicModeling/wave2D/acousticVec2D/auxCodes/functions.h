@@ -40,7 +40,7 @@ void exportVector(float *vector, int nPoints, char filename[])
 }
 
 /* */
-void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, int *abc, int *nrec, int *nshot, int *spread, int *nsrc, char filename[])
+void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, int *abc, int *nrec, int *nshot, int *nsrc, int *wbh, char filename[])
 {
     FILE * arq = fopen((const char *) filename,"r"); 
     if(arq != NULL) 
@@ -48,13 +48,13 @@ void readParameters(int *nx, int *nz, int *nt, float *dx, float *dz, float *dt, 
         fscanf(arq,"%i",nx); fscanf(arq,"%i",nz); fscanf(arq,"%i",nt); 
         fscanf(arq,"%f",dx); fscanf(arq,"%f",dz); fscanf(arq,"%f",dt); 
         fscanf(arq,"%i",abc); fscanf(arq,"%i",nrec); fscanf(arq,"%i",nshot); 
-        fscanf(arq,"%i",spread); fscanf(arq,"%i",nsrc); 
+        fscanf(arq,"%i",nsrc); fscanf(arq,"%i",wbh); 
     } 
     fclose(arq);
 }
 
 /* */
-float * getVelocities(int nxx, int nzz, float *vp, int *topo)
+float * getVelocities(int nxx, int nzz, float *vp)
 {
     float v_max = vp[0];
     float v_min = 99999;
@@ -104,19 +104,20 @@ void modelingStatus(int shot, int time, int *xsrc, int n_shot, int *xrec, int sp
 
         printf("Modeling status:\n");
         printf("   Shot position: %.1f meters\n",(xsrc[shot]-abc)*dx);
-        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[shot]-abc)*dx,(xrec[shot + spread-1]-abc)*dx);
+        printf("   Recivers position: %.1f - %.1f meters\n",(xrec[0]-abc)*dx,(xrec[spread-1]-abc)*dx);
         printf("   Total progress: %.2f %%\n",(float) shot/n_shot * 100.0f);
         printf("\nExported seismograms: %i of %i\n",shot,n_shot);
     }
 }   
 
 /* */
-void ajustCoordinates(int *xrec, int *xsrc, int *topo, int nabc, int nx, int nrec, int nsrc)
+void ajustCoordinates(int *xrec, int *xsrc, int *seaTop, int *seaBot, int wbh, int nabc, int nx, int nrec, int nsrc)
 {
     for (int ii = 0; ii < nrec; ii++) xrec[ii] += nabc;
     for (int ii = 0; ii < nsrc; ii++) xsrc[ii] += nabc;    
 
-    for (int ii = 0; ii < nx+2*nabc; ii++) topo[ii] = nabc + 4;    
+    for (int ii = 0; ii < nx+2*nabc; ii++) seaTop[ii] = nabc + 4;    
+    for (int ii = 0; ii < nx+2*nabc; ii++) seaBot[ii] = nabc + wbh;    
 }
 
 void FDM8E2T_acousticVec2D(int shot, int time, float *Vx, float *Vz, float *P, float *K, float *b, float *source,
@@ -194,12 +195,12 @@ void cerjanAbsorbingBoundaryCondition(float *Vx, float *Vz, float *P, float *dam
 }
 
 /* */
-void getSeismogram(float *seism, float *P, int *xrec, int *topo, int spread, int nrec, int nxx, int nzz, int nt, int shotPointer, int timePointer)
+void getSeismogram(float *seism, float *P, int *xrec, int *seaBot, int nrec, int nxx, int nzz, int nt, int shotPointer, int timePointer)
 {
-    #pragma acc parallel loop present(seism[0:nt*spread],P[0:nxx*nzz],xrec[0:nrec],topo[0:nxx])
-    for (int ii = 0; ii < spread; ii++)
+    #pragma acc parallel loop present(seism[0:nt*nrec],P[0:nxx*nzz],xrec[0:nrec],seaBot[0:nxx])
+    for (int ii = 0; ii < nrec; ii++)
     {
-        seism[timePointer*spread + ii] = P[topo[xrec[ii + shotPointer]]*nxx + xrec[ii + shotPointer]];
+        seism[timePointer*nrec + ii] = P[seaBot[xrec[ii]]*nxx + xrec[ii]];
     }
 }
 
