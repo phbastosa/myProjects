@@ -18,28 +18,35 @@ dt=0.0005       # temporal discretization parameter
 nabc=50        # samples in Cerjan absorbing boundary condition 
 par=0.0045     # parameter to use in exponential function of damp
 
-# Acquisition Geometry parameters
-ns=357         # number of shots in modeling 
-ds=25          # sources spacing
-nr=677         # number of receivers in modeling
-dr=25          # receivers spacing
-spread=320     # active receivers per shot
-offsetMin=100  # minimum offset in acquisition geometry
+# End-On Acquisition Geometry parameters
+# ns=357          # number of shots in modeling 
+# ds=25           # sources spacing
+# nr=677          # number of receivers in modeling
+# dr=25           # receivers spacing
+# spread=320      # active receivers per shot
+# mOffset=100     # minimum offset in acquisition geometry
+
+# OBN Acquisition Geometry parameters
+ns=201          # number of shots in modeling 
+ds=85           # sources spacing
+nr=101          # number of receivers in modeling
+dr=170          # receivers spacing
+wb=100          # water bottim depth
 
 # Source parameters
 fcut=50        # maximum frequency of source Ricker in Hz
 nsrc=600       # total samples of source 
 
 modelPath="model/marmousi2_vp_700x3400_dh5_smooth.bin"
-dataPath="../../dataSets/acousticDataSetInput.bin"
+dataPath="../../dataSets/acoustic_marmousi2_dh5_dataset.bin"
 
 ####################################################################### 
 # Processing - running auxiliary codes to build parameters 
 #######################################################################
 echo "Pre-contitioning parameters:"
 
-xrecPath="parameters/xrec.bin"; xsrcPath="parameters/xsrc.bin"
-python3 auxCodes/buildEndOnGeometry.py $spread $dr $ns $offsetMin $ds $dx $xsrcPath $xrecPath  
+xrecPath="parameters/xrec.bin"; xsrcPath="parameters/xsrc.bin" 
+python3 auxCodes/buildOBNGeometry.py $nr $dr $ns $ds $dx $xsrcPath $xrecPath  
 echo -e "\nAcquisition was built..."
 
 inputModel="parameters/inputModel.bin"
@@ -55,8 +62,8 @@ python3 auxCodes/buildSource.py $dt $nsrc $fcut $source
 echo "Wavelet was built..."
 
 parFileName="parameters/modelingParameters.txt"
-echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nabc\n$spread\n$nr\n$ns\n$nsrc\n" > $parFileName
-echo "Parameters file for migration was built..."
+echo -e "$nx\n$nz\n$nt\n$dx\n$dz\n$dt\n$nabc\n$nr\n$ns\n$nsrc\n$wb" > $parFileName
+echo "RTM parameters was built..."
 
 pgcc -acc -fast -ta=tesla,cc60 RTM.c -lm -o rtm.exe
 ./rtm.exe $parFileName $inputModel $inputDamp $source $xsrcPath $xrecPath $dataPath

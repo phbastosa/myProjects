@@ -6,7 +6,7 @@ exit="../marmousi2_vp_700x3400_dh5_smooth.bin"
 nx=3400
 nz=700
 
-times=20
+times=1
 
 gcc vagarosidade.c -o vag.exe
 ./vag.exe $file $nx $nz slowness.bin

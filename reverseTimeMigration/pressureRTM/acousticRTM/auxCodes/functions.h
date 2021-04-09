@@ -27,15 +27,15 @@ void exportVector2D(float * vector, int nPoints, char filename[])
     fclose(write);
 }
 
-void readParameters(int *nx,int *nz,int *nt,float *dx,float *dz,float *dt,int *abc,int *spread,int *nrecs,int *nshot,int *nsrc, char filename[])
+void readParameters(int *nx,int *nz,int *nt,float *dx,float *dz,float *dt,int *abc,int *nrecs,int *nshot,int *nsrc,int *wbh, char filename[])
 {
     FILE * arq = fopen((const char *) filename,"r"); 
     if(arq != NULL) 
     {
         fscanf(arq,"%i",nx); fscanf(arq,"%i",nz); fscanf(arq,"%i",nt); 
         fscanf(arq,"%f",dx); fscanf(arq,"%f",dz); fscanf(arq,"%f",dt); 
-        fscanf(arq,"%i",abc); fscanf(arq,"%i",spread); fscanf(arq,"%i",nrecs); 
-        fscanf(arq,"%i",nshot); fscanf(arq,"%i",nsrc); 
+        fscanf(arq,"%i",abc); fscanf(arq,"%i",nrecs); fscanf(arq,"%i",nshot); 
+        fscanf(arq,"%i",nsrc); fscanf(arq,"%i",wbh);  
     } 
     fclose(arq);
 }
@@ -59,12 +59,13 @@ void getVelocities(int nxx, int nzz, float * vp,float *vels)
 }
 
 /* */
-void ajustCoordinates(int *xrec, int *xsrc, int *topo, int nabc, int nxx, int nrec, int nsrc)
+void ajustCoordinates(int *xrec, int *xsrc, int *seaTop,int *seaBot, int wbh, int nabc, int nxx, int nrec, int nsrc)
 {
     for (int ii = 0; ii < nrec; ii++) xrec[ii] += nabc;
     for (int ii = 0; ii < nsrc; ii++) xsrc[ii] += nabc;    
 
-    for (int ii = 0; ii < nxx; ii++) topo[ii] = 4 + nabc;    
+    for (int ii = 0; ii < nxx; ii++) seaTop[ii] = 4 + nabc;    
+    for (int ii = 0; ii < nxx; ii++) seaBot[ii] = nabc + wbh;    
 }
 
 void printStatus(float * vels, float dx, float dz, float dt, int nxx, int nzz, int abc, int nt)
@@ -88,7 +89,7 @@ void shotStatus(int tt, int * xsrc, int n_shot, int * xrec, int spread, float dx
     printStatus(vels,dx,dz,dt,nxx,nzz,abc,nt);    
     printf("Migration status:\n");
     printf("   Shot position: %.1f meters\n",(xsrc[tt]-abc)*dx);
-    printf("   Recivers position: %.1f - %.1f meters\n",(float)(xrec[tt]-abc)*dx,(float)(xrec[tt+spread-1]-abc)*dx);
+    printf("   Recivers position: %.1f - %.1f meters\n",(float)(xrec[0]-abc)*dx,(float)(xrec[spread-1]-abc)*dx);
     printf("   Total progress: %.2f %%\n",(float) tt/n_shot * 100.0f);
     printf("\nMigrated seismograms: %i of %i\n",tt,n_shot);
 }   
@@ -163,7 +164,7 @@ void FDM_8E2T_acoustic_depropagation(int shotPointer, int timePointer, float *vp
     #pragma acc parallel loop present(P_pre[0:nxx*nzz],topo[0:nxx],xrec[0:nrecs],seism[0:nt*spread])
     for(int index = 0; index < spread; ++index)
     {
-        P_pre[topo[xrec[shotPointer+index]]*nxx + xrec[shotPointer+index]] = seism[timePointer*spread + index]; /* Applying source*/
+        P_pre[topo[xrec[index]]*nxx + xrec[index]] += seism[timePointer*spread + index]; /* Applying source*/
     }
 
     #pragma acc parallel loop present(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz])

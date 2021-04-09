@@ -11,11 +11,11 @@ int main(int argc,char **argv)
     time_t t_0, t_f;
     t_0 = time(NULL);
 
-    int nx,nz,nt,nsrc,nshot;
-    int nabc,spread,nrecs; 
+    int nx,nz,nt,nsrc,wbh;
+    int nabc,nrecs,nshot; 
     float dx,dz,dt; 
 
-    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nabc,&spread,&nrecs,&nshot,&nsrc,argv[1]);
+    readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nabc,&nrecs,&nshot,&nsrc,&wbh,argv[1]);
 
     int nxx = nx + 2*nabc;
     int nzz = nz + 2*nabc;
@@ -32,7 +32,7 @@ int main(int argc,char **argv)
     float *direct_field_sum = (float *) malloc(nx*nz*sizeof(float));                 /* Summation of direct wave field */
     float *reverse_field_sum = (float *) malloc(nx*nz*sizeof(float));                /* Summation of reverse wave field */
 
-    float *seism  = (float *) malloc(nt*spread*sizeof(float));  /* Seismogram matrix to use in migration */
+    float *seism  = (float *) malloc(nt*nrecs*sizeof(float));   /* Seismogram matrix to use in migration */
     float *source = (float *) malloc(nsrc*sizeof(float));       /* Source Vector */
     
     float *image  = (float *) malloc(nx*nz*sizeof(float));      /* Final image matrix */
@@ -41,7 +41,9 @@ int main(int argc,char **argv)
     
     int *xsrc = (int *) malloc(nshot*sizeof(int));              /* Horizontal shooting position array */
     int *xrec = (int *) malloc(nrecs*sizeof(int));              /* Horizontal receiver position array */    
-    int *topo = (int *) malloc(nxx*sizeof(int));
+
+    int *seaTop = (int *) malloc(nxx*sizeof(int));
+    int *seaBot = (int *) malloc(nxx*sizeof(int));
 
     float *damp  = (float *) malloc(nxx*nzz*sizeof(float));  /* */
 
@@ -52,7 +54,7 @@ int main(int argc,char **argv)
     importIntegerVector(xsrc,nshot,argv[5]);
     importIntegerVector(xrec,nrecs,argv[6]);
 
-    ajustCoordinates(xrec,xsrc,topo,nabc,nxx,nrecs,nshot);
+    ajustCoordinates(xrec,xsrc,seaTop,seaBot,wbh,nabc,nxx,nrecs,nshot);
 
     getVelocities(nxx,nzz,vp,vels);
 
@@ -67,20 +69,20 @@ int main(int argc,char **argv)
         memSet(P_pas,nxx*nzz);                          /* Zeroing past wave field */  
         memSet(P_pre,nxx*nzz);                          /* Zeroing present wave field */
         memSet(P_fut,nxx*nzz);                          /* Zeroing future wave field */
-        memSet(seism,spread*nt);                        /* Zeroing seismogram per shot */
+        memSet(seism,nrecs*nt);                         /* Zeroing seismogram per shot */
         memSet(direct_field,nx*nz*(nt/sampleInterval)); /* Zeroing wave fields per shot */ 
 
-        fread(seism,sizeof(float),spread*nt,read);      /* Reading seismic data file */
+        fread(seism,sizeof(float),nrecs*nt,read);       /* Reading seismic data file */
 
-        #pragma acc enter data copyin(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz],seism[0:nt*spread],damp[0:nxx*nzz])
-        #pragma acc enter data copyin(xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc],direct_field[0:nx*nz*(nt/sampleInterval)])
+        #pragma acc enter data copyin(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz],seism[0:nt*nrecs],damp[0:nxx*nzz])
+        #pragma acc enter data copyin(xsrc[0:nshot],xrec[0:nrecs],seaTop[0:nxx],seaBot[0:nxx],source[0:nsrc],direct_field[0:nx*nz*(nt/sampleInterval)])
         #pragma acc enter data copyin(direct_field_sum[0:nx*nz],reverse_field_sum[0:nx*nz],image[0:nx*nz])
         
         for(int timePointer = 0; timePointer < nt; ++timePointer) /* Time loop */
         {
-            propagationProgress(timePointer,shotPointer,xsrc,nshot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,nabc);
+            propagationProgress(timePointer,shotPointer,xsrc,nshot,xrec,nrecs,dx,dz,nt,vels,dt,nxx,nzz,nabc);
 
-            FDM_8E2T_acoustic2D(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,topo,xsrc,nshot,nxx,nzz,dx,dz,dt);
+            FDM_8E2T_acoustic2D(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,source,nsrc,seaTop,xsrc,nshot,nxx,nzz,dx,dz,dt);
             
             cerjanAbsorbingBoundaryCondition(P_pas,P_pre,P_fut,damp,nxx*nzz);
 
@@ -95,9 +97,9 @@ int main(int argc,char **argv)
 
         for(int timePointer = nt-1; timePointer >= 0; --timePointer) /* Temporal depropagation loop */
         {                  
-            depropagationProgress(nt-timePointer,shotPointer,xsrc,nshot,xrec,spread,dx,dz,nt,vels,dt,nxx,nzz,nabc);
+            depropagationProgress(nt-timePointer,shotPointer,xsrc,nshot,xrec,nrecs,dx,dz,nt,vels,dt,nxx,nzz,nabc);
 
-            FDM_8E2T_acoustic_depropagation(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,seism,spread,xrec,nrecs,topo,nxx,nzz,nt,dx,dz,dt);
+            FDM_8E2T_acoustic_depropagation(shotPointer,timePointer,vp,P_pre,P_pas,P_fut,seism,nrecs,xrec,nrecs,seaBot,nxx,nzz,nt,dx,dz,dt);
 
             getSquareSumField(P_fut,reverse_field_sum,nxx,nzz,nabc);
 
@@ -106,8 +108,8 @@ int main(int argc,char **argv)
             waveFieldUpdate(P_pas,P_pre,P_fut,nxx*nzz);
         }
         
-        #pragma acc exit data delete(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz],seism[0:nt*spread],damp[0:nxx*nzz])
-        #pragma acc exit data delete(xsrc[0:nshot],xrec[0:nrecs],topo[0:nxx],source[0:nsrc],direct_field[0:nx*nz*(nt/sampleInterval)])
+        #pragma acc exit data delete(P_pas[0:nxx*nzz],P_pre[0:nxx*nzz],P_fut[0:nxx*nzz],vp[0:nxx*nzz],seism[0:nt*nrecs],damp[0:nxx*nzz])
+        #pragma acc exit data delete(xsrc[0:nshot],xrec[0:nrecs],seaTop[0:nxx],seaBot[0:nxx],source[0:nsrc],direct_field[0:nx*nz*(nt/sampleInterval)])
         #pragma acc exit data copyout(direct_field_sum[0:nx*nz],reverse_field_sum[0:nx*nz],image[0:nx*nz])
     }
     
