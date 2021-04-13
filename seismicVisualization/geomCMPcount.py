@@ -1,19 +1,20 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-ng = 50        # Quantidade de sensores ativos por tiro
-dg = 10        # Espaçamento entre os sensores
+ng = 240        # Quantidade de sensores ativos por tiro
+dg = 40         # Espaçamento entre os sensores
 
-ns = 20        # Quantidade de fontes na aquisição
-offset = 20    # Distância entre a fonte e o sensor mais próximo
-ds = 10        # Espaçamento entre disparos  
+ns = 1000       # Quantidade de fontes na aquisição
+# offset = 0    # Distância entre a fonte e o sensor mais próximo
+ds = 40         # Espaçamento entre disparos  
 
 sx = np.zeros(ng*ns)
 gx = np.zeros(ng*ns)
 id = np.zeros(ng*ns)
 
 gx[:ng] = np.arange(ng) * dg
-sx[:ng] = np.ones(ng) * (ng-1) * dg + offset
+# sx[:ng] = np.ones(ng) * (ng-1) * dg + offset # Formulação para aquisição End-On 
+sx[:ng] = np.ones(ng) * (ng/2) * dg  # Formulação para aquisição Split-Spread
 id[:ng] = np.ones(ng)
 
 for i in range(1,ns):
