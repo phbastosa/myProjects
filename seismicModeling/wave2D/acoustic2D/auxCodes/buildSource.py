@@ -31,13 +31,16 @@ def halfDerivative(wavelet, dt):
 
     return parameter * np.real(np.fft.ifft(fwavelet)) 
 
-dt = float(sys.argv[1])              # Parâmetro de discretização espacial
-nsrc = int(sys.argv[2])              # Quantidade de amostras na fonte
-fcut = float(sys.argv[3])            # Frequencia de pico da fonte 
+dt = 0.001              # Parâmetro de discretização espacial
+nsrc = 300              # Quantidade de amostras na fonte
+fcut = 30            # Frequencia de pico da fonte 
 
 ricker = rickerGenerator(fcut,nsrc,dt)
-source = halfDerivative(rickerGenerator(fcut,nsrc,dt),dt)
-source.astype("float32",order="C").tofile(sys.argv[4])
+# source = halfDerivative(rickerGenerator(fcut,nsrc,dt),dt)
+# source.astype("float32",order="C").tofile(sys.argv[4])
+
+plt.plot(ricker)
+plt.show()
 
 # times = np.arange(nsrc) * dt
 # freqs = np.fft.fftfreq(nsrc,dt)

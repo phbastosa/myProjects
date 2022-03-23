@@ -136,8 +136,9 @@ void FDM8E2T_stressStencil_elasticIsotropic2D(float *Vx, float *Vz, float *Txx, 
 
         if((index == 0) && (timePointer < nsrc)) 
         {
-            Txx[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);
-            Tzz[zsrc*nxx + xsrc] += source[timePointer] / (dx*dz);   
+            // Txx[zsrc*nxx + xsrc] += source[timePointer]; // (dx*dz);
+            // Tzz[zsrc*nxx + xsrc] += source[timePointer]; // (dx*dz);   
+            Vz[zsrc*nxx + xsrc] += source[timePointer]; // (dx*dz);  
         }
 
         if((ii >= 3) && (ii < nzz-4) && (jj >= 3) && (jj < nxx-4)) 
@@ -421,13 +422,23 @@ void getAcousticPressureSeismogram(float *seism, float *P, int nt, int nxx, int 
     }
 }
 
-void getElasticIsotropicPressureSeismogram(float *seism, float *Txx, float *Tzz, int nt, int nxx, int nzz, int timePointer, int zrec)
+void getElasticIsotropicPressureSeismogram(float *seismVx, float *seismVz, float *Vx, float *Vz, int nt, int nxx, int nzz, int timePointer, int zrec)
 {
     # pragma acc parallel loop present(seism[0:nxx*nt],Txx[0:nxx*nzz],Tzz[0:nxx*nzz])
     for(int index = 0; index < nxx; index++) 
     {
-        seism[timePointer*nxx + index] = (Txx[zrec*nxx + index] + Tzz[zrec*nxx + index])/2.0f;
+        seismVx[timePointer*nxx + index] = Vx[zrec*nxx + index]; 
+        seismVz[timePointer*nxx + index] = Vz[zrec*nxx + index];
     }
 }
+
+// void getSeismogram(float *seism, float *waveField, int nt, int nxx, int nzz, int timePointer, int zrec)
+// {
+//     # pragma acc parallel loop present(seism[0:nxx*nt],waveField[0:nxx*nzz])
+//     for(int index = 0; index < nxx; index++) 
+//     {
+//         seism[timePointer*nxx + index] = waveField[zrec*nxx + index];
+//     }
+// }
 
 # endif

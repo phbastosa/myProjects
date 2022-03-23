@@ -19,6 +19,8 @@ int main(int argc, char **argv)
     readParameters(&nx,&nz,&nt,&dx,&dz,&dt,&nsrc,&xsrc,&zsrc,&zrec,argv[1]);
 
     float *seismogram = (float *) malloc(nx*nt*sizeof(float));
+    float *seismVx = (float *) malloc(nx*nt*sizeof(float));
+    float *seismVz = (float *) malloc(nx*nt*sizeof(float));
 
     float *vp  = (float *) malloc(nx*nz*sizeof(float));  
     float *vs  = (float *) malloc(nx*nz*sizeof(float));
@@ -35,9 +37,9 @@ int main(int argc, char **argv)
     
     for(int index = 0; index < nx*nz; index++) 
     {
-        vp[index]  = 1500.0f;
-        vs[index]  = 0.0f;
-        rho[index] = 1000.0f;
+        vp[index]  = 3000.0f;
+        vs[index]  = 1730.0f;
+        rho[index] = 2000.0f;
         M[index]   = rho[index]*powf(vs[index],2.0f);
         L[index]   = rho[index]*powf(vp[index],2.0f) - 2.0f*M[index];
     }
@@ -54,13 +56,17 @@ int main(int argc, char **argv)
         FDM8E2T_stressStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);
         // FDM8E2T_velocityStencil_elasticIsotropic2D(Vx,Vz,Txx,Tzz,Txz,rho,M,L,nx,nz,dt,dx,dz,timePointer,source,nsrc,zsrc,xsrc);
 
-        getElasticIsotropicPressureSeismogram(seismogram,Txx,Tzz,nt,nx,nz,timePointer,zrec);
+        getElasticIsotropicPressureSeismogram(seismVx,seismVz,Vx,Vz,nt,nx,nz,timePointer,zrec);
+        // getSeismogram(seismVx,Vx,nt,nx,nz,timePointer,zrec);
     }
-    # pragma acc exit data delete(Vx[0:nx*nz],Vz[0:nx*nz],Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
+    # pragma acc exit data delete(Txx[0:nx*nz],Tzz[0:nx*nz],Txz[0:nx*nz])
     # pragma acc exit data delete(rho[0:nx*nz],M[0:nx*nz],L[0:nx*nz],source[0:nsrc])
-    # pragma acc exit data copyout(seismogram[0:nx*nt])
+    # pragma acc exit data copyout(Vx[0:nx*nz],Vz[0:nx*nz],seismogram[0:nx*nt])
 
-    exportVector(seismogram,nx*nt,"results/seismograms/pressureElasticIsotropic2D.bin");
+    // exportVector(seismogram,nx*nt,"results/seismograms/pressureElasticIsotropic2D.bin");
+    // exportVector(seismogram,nx*nt,"seismPressure.bin");
+    exportVector(seismVx,nx*nt,"seismVx.bin");
+    exportVector(seismVz,nx*nt,"seismVz.bin");
 
     tf = time(NULL);
     totalTime = difftime(tf, t0);
